@@ -1,0 +1,43 @@
+.ProseMirror-menu-button {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 15px;
+  height: 13px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  padding: 0;
+
+  -webkit-transition: top 0.3s ease-out;
+  -moz-transition: top 0.3s ease-out;
+  transition: top 0.3s ease-out;
+}
+
+.ProseMirror-menu-button div {
+  height: 3px;
+  margin-bottom: 2px;
+  border-radius: 4px;
+  background: #888;
+}
+
+.ProseMirror-menu-button:hover div {
+  background: #333;
+}
+
+.ProseMirror-menu {
+  padding: 0;
+  margin: 0 -4px;
+  display: block;
+  line-height: 1;
+  white-space: pre;
+  width: -webkit-fit-content;
+  width: fit-content;
+}
+
+.ProseMirror-menu li {
+  display: inline-block;
+  padding: 2px 7px;
+  margin: 0 2px;
+  cursor: pointer;
+}
