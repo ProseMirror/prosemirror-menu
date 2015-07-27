@@ -7,7 +7,6 @@ export class Tooltip {
   constructor(pm, dir) {
     this.pm = pm
     this.dir = dir || "above"
-    this.knownSizes = Object.create(null)
     this.pointer = pm.wrapper.appendChild(elt("div", {class: prefix + "-pointer-" + this.dir + " " + prefix + "-pointer"}))
     this.pointerWidth = this.pointerHeight = null
     this.dom = pm.wrapper.appendChild(elt("div", {class: prefix}))
@@ -25,19 +24,17 @@ export class Tooltip {
     this.pointer.parentNode.removeChild(this.pointer)
   }
 
-  getSize(type, node) {
-    let known = type && this.knownSizes[type]
-    if (!known) {
-      let wrap = this.pm.wrapper.appendChild(elt("div", {class: prefix}, node))
-      wrap.style.display = "block"
-      known = {width: wrap.offsetWidth, height: wrap.offsetHeight}
-      if (type) this.knownSizes[type] = known
-      wrap.parentNode.removeChild(wrap)
-    }
-    return known
+  getSize(node) {
+    let wrap = this.pm.wrapper.appendChild(elt("div", {
+      class: prefix,
+      style: "display: block; position: absolute"
+    }, node))
+    let size = {width: wrap.offsetWidth, height: wrap.offsetHeight}
+    wrap.parentNode.removeChild(wrap)
+    return size
   }
 
-  show(type, node, pos) {
+  show(node, pos) {
     if (this.pm.mod.tooltip && this.pm.mod.tooltip != this)
       this.pm.mod.tooltip.close()
     this.pm.mod.tooltip = this
@@ -45,7 +42,7 @@ export class Tooltip {
     let left = this.lastLeft = pos ? pos.left : this.lastLeft
     let top = this.lastTop = pos ? pos.top : this.lastTop
 
-    let size = this.getSize(type, node)
+    let size = this.getSize(node)
 
     let around = this.pm.wrapper.getBoundingClientRect()
 
