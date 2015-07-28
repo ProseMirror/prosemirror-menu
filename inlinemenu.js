@@ -4,33 +4,22 @@ import {elt} from "../dom"
 import {Debounced} from "../util/debounce"
 
 import {Tooltip} from "./tooltip"
-import {InlineStyleItem, ImageItem, LinkDialog} from "./menuitem"
-import {Menu, forceFontLoad} from "./menu"
-import {MenuDefinition} from "./define"
+import {getItems, forceFontLoad} from "./items"
+import {Menu, TooltipDisplay} from "./menu"
 
 import insertCSS from "insert-css"
 
 const classPrefix = "ProseMirror-inlinetooltip"
 
-defineOption("inlineTooltip", false, function(pm, value) {
-  if (pm.mod.inlineTooltip)
-    pm.mod.inlineTooltip.detach()
-  if (value)
-    pm.mod.inlineTooltip = new InlineTooltip(pm, value)
+defineOption("inlineMenu", false, function(pm, value) {
+  if (pm.mod.inlineMenu) pm.mod.inlineMenu.detach()
+  pm.mod.inlineTooltip = value ? new InlineTooltip(pm, value) : null
 })
-
-export const items = new MenuDefinition
-
-items.addItem(new InlineStyleItem("bold", "Strong text", style.strong))
-items.addItem(new InlineStyleItem("italic", "Emphasized text", style.em))
-items.addItem(new InlineStyleItem("chain", "Hyperlink", "link", new LinkDialog))
-items.addItem(new ImageItem("image"))
-items.addItem(new InlineStyleItem("code", "Code font", style.code))
 
 class InlineTooltip {
   constructor(pm, config) {
     this.pm = pm
-    this.items = (config && config.items) || items.getItems()
+    this.items = (config && config.items) || getItems("inline")
     this.showLinks = config ? config.showLinks !== false : true
     this.debounced = new Debounced(pm, 100, () => this.update())
 
@@ -39,7 +28,7 @@ class InlineTooltip {
     pm.on("blur", this.updateFunc)
 
     this.tooltip = new Tooltip(pm, "above")
-    this.menu = Menu.fromTooltip(pm, this.tooltip, this.updateFunc)
+    this.menu = new Menu(pm, new TooltipDisplay(this.tooltip, this.updateFunc))
 
     forceFontLoad(pm)
   }
@@ -66,7 +55,7 @@ class InlineTooltip {
     if (!this.pm.hasFocus())
       this.tooltip.close()
     else if (!sel.empty && !this.inPlainText(sel))
-      this.menu.open(this.items, topCenterOfSelection())
+      this.menu.show(this.items, topCenterOfSelection())
     else if (this.showLinks && (link = this.linkUnderCursor()))
       this.showLink(link, this.pm.coordsAtPos(sel.head))
     else
@@ -80,7 +69,7 @@ class InlineTooltip {
 
   showLink(link, pos) {
     let node = elt("div", {class: classPrefix + "-linktext"}, elt("a", {href: link.href, title: link.title}, link.href))
-    this.tooltip.show("link-" + link.href, node, pos)
+    this.tooltip.open(node, pos)
   }
 }
 
