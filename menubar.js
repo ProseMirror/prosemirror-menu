@@ -9,7 +9,7 @@ class MenuBar {
   constructor(pm, config) {
     this.pm = pm
 
-    this.wrapper = pm.wrapper.insertBefore(elt("div", {class: prefix}), pm.wrapper.firstChild)
+    this.wrapper = pm.view.wrapper.insertBefore(elt("div", {class: prefix}), pm.view.wrapper.firstChild)
     this.spacer = null
     this.maxHeight = 0
     this.widthForMaxHeight = 0
@@ -20,13 +20,13 @@ class MenuBar {
       pm.on.activeMarkChange
     ], () => this.update())
     this.content = config.content
-    this.updater.force()
+    this.update()
 
     this.floating = false
     if (config.float) {
       this.updateFloat()
       this.scrollFunc = () => {
-        if (!document.body.contains(this.pm.wrapper))
+        if (!document.body.contains(this.pm.view.wrapper))
           window.removeEventListener("scroll", this.scrollFunc)
         else
           this.updateFloat()
@@ -61,7 +61,7 @@ class MenuBar {
   }
 
   updateFloat() {
-    let editorRect = this.pm.wrapper.getBoundingClientRect()
+    let editorRect = this.pm.view.wrapper.getBoundingClientRect()
     if (this.floating) {
       if (editorRect.top >= 0 || editorRect.bottom < this.wrapper.offsetHeight + 10) {
         this.floating = false
@@ -70,7 +70,7 @@ class MenuBar {
         this.spacer.parentNode.removeChild(this.spacer)
         this.spacer = null
       } else {
-        let border = (this.pm.wrapper.offsetWidth - this.pm.wrapper.clientWidth) / 2
+        let border = (this.pm.view.wrapper.offsetWidth - this.pm.view.wrapper.clientWidth) / 2
         this.wrapper.style.left = (editorRect.left + border) + "px"
         this.wrapper.style.display = (editorRect.top > window.innerHeight ? "none" : "")
       }
@@ -82,7 +82,7 @@ class MenuBar {
         this.wrapper.style.width = menuRect.width + "px"
         this.wrapper.style.position = "fixed"
         this.spacer = elt("div", {class: prefix + "-spacer", style: "height: " + menuRect.height + "px"})
-        this.pm.wrapper.insertBefore(this.spacer, this.wrapper)
+        this.pm.view.wrapper.insertBefore(this.spacer, this.wrapper)
       }
     }
   }
@@ -95,7 +95,7 @@ class MenuBar {
       let cursorPos = this.pm.coordsAtPos(head)
       let menuRect = this.wrapper.getBoundingClientRect()
       if (cursorPos.top < menuRect.bottom && cursorPos.bottom > menuRect.top) {
-        let scrollable = findWrappingScrollable(this.pm.wrapper)
+        let scrollable = findWrappingScrollable(this.pm.view.wrapper)
         if (scrollable)
           return () => { scrollable.scrollTop -= (menuRect.bottom - cursorPos.top) }
       }

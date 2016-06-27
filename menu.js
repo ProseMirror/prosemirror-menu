@@ -152,7 +152,7 @@ class Dropdown {
   }
 
   expand(pm, dom, items) {
-    let box = dom.getBoundingClientRect(), outer = pm.wrapper.getBoundingClientRect()
+    let box = dom.getBoundingClientRect(), outer = pm.view.wrapper.getBoundingClientRect()
     let menuDOM = elt("div", {class: prefix + "-dropdown-menu " + (this.options.class || ""),
                               style: "left: " + (box.left - outer.left) + "px; top: " + (box.bottom - outer.top) + "px"},
                       items)
@@ -162,11 +162,11 @@ class Dropdown {
       if (done) return
       done = true
       pm.on.interaction.remove(finish)
-      pm.wrapper.removeChild(menuDOM)
+      pm.view.wrapper.removeChild(menuDOM)
       return true
     }
     pm.on.interaction.dispatch()
-    pm.wrapper.appendChild(menuDOM)
+    pm.view.wrapper.appendChild(menuDOM)
     pm.on.interaction.add(finish)
     return finish
   }

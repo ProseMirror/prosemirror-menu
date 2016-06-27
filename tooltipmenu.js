@@ -19,16 +19,16 @@ class TooltipMenu {
       pm.on.focus
     ], () => this.update())
     this.onContextMenu = this.onContextMenu.bind(this)
-    pm.content.addEventListener("contextmenu", this.onContextMenu)
+    pm.view.content.addEventListener("contextmenu", this.onContextMenu)
 
-    this.tooltip = new Tooltip(pm.wrapper, this.config.position)
+    this.tooltip = new Tooltip(pm.view.wrapper, this.config.position)
     this.selectedBlockContent = this.config.selectedBlockContent || this.config.inlineContent.concat(this.config.blockContent)
   }
 
   detach() {
     this.updater.detach()
     this.tooltip.detach()
-    this.pm.content.removeEventListener("contextmenu", this.onContextMenu)
+    this.pm.view.content.removeEventListener("contextmenu", this.onContextMenu)
   }
 
   show(content, coords) {
@@ -77,7 +77,7 @@ class TooltipMenu {
   }
 
   nodeSelectionCoords() {
-    let selected = this.pm.content.querySelector(".ProseMirror-selectednode")
+    let selected = this.pm.view.content.querySelector(".ProseMirror-selectednode")
     if (!selected) return {left: 0, top: 0}
     let box = selected.getBoundingClientRect()
     return {left: Math.min((box.left + box.right) / 2, box.left + 20),
@@ -108,7 +108,7 @@ class TooltipMenu {
     if (!pos || !this.pm.doc.resolve(pos).parent.isTextblock) return
 
     this.pm.setTextSelection(pos, pos)
-    this.pm.flush()
+    this.pm.updateView()
     this.show(this.config.inlineContent, this.selectionCoords())
   }
 }
