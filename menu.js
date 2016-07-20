@@ -15,43 +15,47 @@ class MenuItem {
     this.spec = spec
   }
 
-  // :: (ProseMirror) → DOMNode
+  // :: (EditorView) → DOMNode
   // Renders the icon according to its [display
   // spec](#MenuItemSpec.display), and adds an event handler which
   // executes the command when the representation is clicked.
-  render(pm) {
+  render(state, props) {
     let disabled = false, spec = this.spec
-    if (spec.select && !spec.select(pm)) {
+    if (spec.select && !spec.select(state)) {
       if (spec.onDeselected == "disable") disabled = true
       else return null
     }
-    let active = spec.active && !disabled && spec.active(pm)
+    let active = spec.active && !disabled && spec.active(state)
 
     let dom
     if (spec.render) {
-      dom = spec.render(pm)
+      dom = spec.render(state, props)
     } else if (spec.icon) {
       dom = getIcon(spec.icon)
       if (active) dom.classList.add(prefix + "-active")
     } else if (spec.label) {
-      dom = elt("div", null, pm.translate(spec.label))
+      dom = elt("div", null, translate(props, spec.label))
     } else {
       throw new RangeError("MenuItem without render, icon, or label property")
     }
 
-    if (spec.title) dom.setAttribute("title", pm.translate(spec.title))
+    if (spec.title) dom.setAttribute("title", translate(props, spec.title))
     if (spec.class) dom.classList.add(spec.class)
     if (disabled) dom.classList.add(prefix + "-disabled")
     if (spec.css) dom.style.cssText += spec.css
     if (!disabled) dom.addEventListener(spec.execEvent || "mousedown", e => {
       e.preventDefault(); e.stopPropagation()
-      pm.on.interaction.dispatch()
-      spec.run(pm)
+      let applied = spec.run(state)
+      if (applied) props.onChange(applied)
     })
     return dom
   }
 }
 exports.MenuItem = MenuItem
+
+function translate(props, text) {
+  return props.translate ? props.translate(text) : text
+}
 
 // :: Object #path=MenuItemSpec #kind=interface
 // The configuration object passed to the `MenuItem` constructor.
@@ -134,49 +138,43 @@ class Dropdown {
 
   // :: (ProseMirror) → DOMNode
   // Returns a node showing the collapsed menu, which expands when clicked.
-  render(pm) {
-    let items = renderDropdownItems(this.content, pm)
+  render(state, props) {
+    let items = renderDropdownItems(this.content, state, props)
     if (!items.length) return null
 
     let dom = elt("div", {class: prefix + "-dropdown " + (this.options.class || ""),
                           style: this.options.css,
-                          title: this.options.title && pm.translate(this.options.title)},
-                  pm.translate(this.options.label))
+                          title: this.options.title && translate(props, this.options.title)},
+                  translate(props, this.options.label))
     let open = null
     dom.addEventListener("mousedown", e => {
       e.preventDefault(); e.stopPropagation()
       if (open && open()) open = null
-      else open = this.expand(pm, dom, items)
+      else open = this.expand(dom, items)
     })
     return dom
   }
 
-  expand(pm, dom, items) {
-    let box = dom.getBoundingClientRect(), outer = pm.view.wrapper.getBoundingClientRect()
-    let menuDOM = elt("div", {class: prefix + "-dropdown-menu " + (this.options.class || ""),
-                              style: "left: " + (box.left - outer.left) + "px; top: " + (box.bottom - outer.top) + "px"},
-                      items)
+  expand(dom, items) {
+    let menuDOM = elt("div", {class: prefix + "-dropdown-menu " + (this.options.class || "")}, items)
 
     let done = false
     function finish() {
       if (done) return
       done = true
-      pm.on.interaction.remove(finish)
-      pm.view.wrapper.removeChild(menuDOM)
+      dom.removeChild(menuDOM)
       return true
     }
-    pm.on.interaction.dispatch()
-    pm.view.wrapper.appendChild(menuDOM)
-    pm.on.interaction.add(finish)
+    dom.appendChild(menuDOM)
     return finish
   }
 }
 exports.Dropdown = Dropdown
 
-function renderDropdownItems(items, pm) {
+function renderDropdownItems(items, state, props) {
   let rendered = []
   for (let i = 0; i < items.length; i++) {
-    let inner = items[i].render(pm)
+    let inner = items[i].render(state, props)
     if (inner) rendered.push(elt("div", {class: prefix + "-dropdown-item"}, inner))
   }
   return rendered
@@ -198,11 +196,11 @@ class DropdownSubmenu {
 
   // :: (ProseMirror) → DOMNode
   // Renders the submenu.
-  render(pm) {
-    let items = renderDropdownItems(this.content, pm)
+  render(state, props) {
+    let items = renderDropdownItems(this.content, state, props)
     if (!items.length) return null
 
-    let label = elt("div", {class: prefix + "-submenu-label"}, pm.translate(this.options.label))
+    let label = elt("div", {class: prefix + "-submenu-label"}, translate(props, this.options.label))
     let wrap = elt("div", {class: prefix + "-submenu-wrap"}, label,
                    elt("div", {class: prefix + "-submenu"}, items))
     label.addEventListener("mousedown", e => {
@@ -219,12 +217,12 @@ exports.DropdownSubmenu = DropdownSubmenu
 // document fragment, placing separators between them (and ensuring no
 // superfluous separators appear when some of the groups turn out to
 // be empty).
-function renderGrouped(pm, content) {
+function renderGrouped(state, props, content) {
   let result = document.createDocumentFragment(), needSep = false
   for (let i = 0; i < content.length; i++) {
     let items = content[i], added = false
     for (let j = 0; j < items.length; j++) {
-      let rendered = items[j].render(pm)
+      let rendered = items[j].render(state, props)
       if (rendered) {
         if (!added && needSep) result.appendChild(separator())
         result.appendChild(elt("span", {class: prefix + "item"}, rendered))
@@ -301,7 +299,7 @@ exports.icons = icons
 const joinUpItem = new MenuItem({
   title: "Join with above block",
   run: joinUp,
-  select: pm => joinUp(pm, false),
+  select: state => joinUp(state, false),
   icon: icons.join
 })
 exports.joinUpItem = joinUpItem
@@ -311,7 +309,7 @@ exports.joinUpItem = joinUpItem
 const liftItem = new MenuItem({
   title: "Lift out of enclosing block",
   run: lift,
-  select: pm => lift(pm, false),
+  select: state => lift(state, false),
   icon: icons.lift
 })
 exports.liftItem = liftItem
@@ -321,7 +319,7 @@ exports.liftItem = liftItem
 const selectParentNodeItem = new MenuItem({
   title: "Select parent node",
   run: selectParentNode,
-  select: pm => selectParentNode(pm, false),
+  select: state => selectParentNode(state, false),
   icon: icons.selectParentNode
 })
 exports.selectParentNodeItem = selectParentNodeItem
@@ -331,7 +329,7 @@ exports.selectParentNodeItem = selectParentNodeItem
 const undoItem = new MenuItem({
   title: "Undo last change",
   run: undo,
-  select: pm => undo(pm, false),
+  select: state => undo(state, false),
   icon: icons.undo
 })
 exports.undoItem = undoItem
@@ -341,37 +339,36 @@ exports.undoItem = undoItem
 const redoItem = new MenuItem({
   title: "Redo last undone change",
   run: redo,
-  select: pm => redo(pm, false),
+  select: state => redo(state, false),
   icon: icons.redo
 })
 exports.redoItem = redoItem
 
-function markActive(pm, type) {
-  let {from, to, empty} = pm.selection
-  if (empty) return type.isInSet(pm.activeMarks())
-  else return pm.doc.rangeHasMark(from, to, type)
+function markActive(state, type) {
+  let {from, to, empty} = state.selection
+  if (empty) return type.isInSet(state.storedMarks || state.doc.marksAt(from))
+  else return state.doc.rangeHasMark(from, to, type)
 }
 
 // :: (MarkType, Object) → MenuItem
 // Create a menu item for toggling a mark on the selection. Will create
 // `run`, `active`, and `select` properties. Other properties have to
 // be supplied in the `options` object. When `options.attrs` is a
-// function, it will be called with `(pm: ProseMirror, callback:
-// (attrs: ?Object))` arguments, and should produce the attributes for
-// the mark and then call the callback. Otherwise, it may be an object
+// function, FIXME. Otherwise, it may be an object
 // providing the attributes directly.
 function toggleMarkItem(markType, options) {
   let command = toggleMark(markType, options.attrs)
   let base = {
-    run(pm) { command(pm) },
-    active(pm) { return markActive(pm, markType) },
-    select(pm) { return command(pm, false) }
+    run: command,
+    active(state) { return markActive(state, markType) },
+    select(state) { return command(state, false) }
   }
+  /* FIXME
   if (options.attrs instanceof Function) base.run = pm => {
     if (markActive(pm, markType)) command(pm)
     else options.attrs(pm, attrs => toggleMark(markType, attrs)(pm))
   }
-
+  */
   return new MenuItem(copyObj(options, base))
 }
 exports.toggleMarkItem = toggleMarkItem
@@ -383,21 +380,20 @@ exports.toggleMarkItem = toggleMarkItem
 // `toggleMarkItem`.
 function insertItem(nodeType, options) {
   return new MenuItem(copyObj(options, {
-    select(pm) {
-      let $from = pm.selection.$from
+    select(state) {
+      let $from = state.selection.$from
       for (let d = $from.depth; d >= 0; d--) {
         let index = $from.index(d)
         if ($from.node(d).canReplaceWith(index, index, nodeType,
+                                         // FIXME
                                          options.attrs instanceof Function ? null : options.attrs))
           return true
       }
     },
-    run(pm) {
-      function done(attrs) {
-        pm.tr.replaceSelection(nodeType.createAndFill(attrs)).apply()
-      }
-      if (options.attrs instanceof Function) options.attrs(pm, done)
-      else done(options.attrs)
+    run(state) {
+      // FIXME
+      //if (options.attrs instanceof Function) options.attrs(state, done)
+      return state.tr.replaceSelection(nodeType.createAndFill(options.attrs)).apply()
     }
   }))
 }
@@ -410,12 +406,12 @@ exports.insertItem = insertItem
 // `toggleMarkItem`.
 function wrapItem(nodeType, options) {
   return new MenuItem(copyObj(options, {
-    run(pm) {
-      if (options.attrs instanceof Function) options.attrs(pm, attrs => wrapIn(nodeType, attrs)(pm))
-      else wrapIn(nodeType, options.attrs)(pm)
+    run(state) {
+      // FIXME if (options.attrs instanceof Function) options.attrs(state, attrs => wrapIn(nodeType, attrs)(state))
+      return wrapIn(nodeType, options.attrs)(state)
     },
-    select(pm) {
-      return wrapIn(nodeType, options.attrs instanceof Function ? null : options.attrs)(pm, false)
+    select(state) {
+      return wrapIn(nodeType, options.attrs instanceof Function ? null : options.attrs)(state, false)
     }
   }))
 }
@@ -430,9 +426,9 @@ function blockTypeItem(nodeType, options) {
   let command = setBlockType(nodeType, options.attrs)
   return new MenuItem(copyObj(options, {
     run: command,
-    select(pm) { return command(pm, false) },
-    active(pm) {
-      let {$from, to, node} = pm.selection
+    select(state) { return command(state, false) },
+    active(state) {
+      let {$from, to, node} = state.selection
       if (node) return node.hasMarkup(nodeType, options.attrs)
       return to <= $from.end() && $from.parent.hasMarkup(nodeType, options.attrs)
     }
