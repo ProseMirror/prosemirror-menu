@@ -2,11 +2,9 @@ const {copyObj} = require("../util/obj")
 
 copyObj(require("./menu"), exports)
 exports.menuBar = require("./menubar").menuBar
-exports.tooltipMenu = require("./tooltipmenu").tooltipMenu
 
 // !! This module defines a number of building blocks for ProseMirror
-// menus, along with two menu styles, [`menubar`](#menuBar) and
-// [`tooltipmenu`](#tooltipMenu).
+// menus, along with a [menu bar](#menuBar) implementation.
 
 // ;; #path=MenuElement #kind=interface
 // The types defined in this module aren't the only thing you can
