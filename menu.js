@@ -1,5 +1,5 @@
 const {elt, insertCSS} = require("../util/dom")
-const {undo, redo, lift, joinUp, selectParentNode, wrapIn, setBlockType, toggleMark} = require("../commands")
+const {lift, joinUp, selectParentNode, wrapIn, setBlockType, toggleMark} = require("../commands")
 const {copyObj} = require("../util/obj")
 
 const {getIcon} = require("./icons")
@@ -45,8 +45,7 @@ class MenuItem {
     if (spec.css) dom.style.cssText += spec.css
     if (!disabled) dom.addEventListener(spec.execEvent || "mousedown", e => {
       e.preventDefault(); e.stopPropagation()
-      let applied = spec.run(state)
-      if (applied) props.onChange(applied)
+      spec.run(state, props.onAction)
     })
     return dom
   }
@@ -299,7 +298,7 @@ exports.icons = icons
 const joinUpItem = new MenuItem({
   title: "Join with above block",
   run: joinUp,
-  select: state => joinUp(state, false),
+  select: state => joinUp(state),
   icon: icons.join
 })
 exports.joinUpItem = joinUpItem
@@ -309,7 +308,7 @@ exports.joinUpItem = joinUpItem
 const liftItem = new MenuItem({
   title: "Lift out of enclosing block",
   run: lift,
-  select: state => lift(state, false),
+  select: state => lift(state),
   icon: icons.lift
 })
 exports.liftItem = liftItem
@@ -319,29 +318,33 @@ exports.liftItem = liftItem
 const selectParentNodeItem = new MenuItem({
   title: "Select parent node",
   run: selectParentNode,
-  select: state => selectParentNode(state, false),
+  select: state => selectParentNode(state),
   icon: icons.selectParentNode
 })
 exports.selectParentNodeItem = selectParentNodeItem
 
-// :: MenuItem
+// :: (Object) → MenuItem
 // Menu item for the `undo` command.
-const undoItem = new MenuItem({
-  title: "Undo last change",
-  run: undo,
-  select: state => undo(state, false),
-  icon: icons.undo
-})
+function undoItem(historyPlugin) {
+  return new MenuItem({
+    title: "Undo last change",
+    run: historyPlugin.undo,
+    select: state => historyPlugin.undo(state),
+    icon: icons.undo
+  })
+}
 exports.undoItem = undoItem
 
-// :: MenuItem
+// :: (Object) → MenuItem
 // Menu item for the `redo` command.
-const redoItem = new MenuItem({
-  title: "Redo last undone change",
-  run: redo,
-  select: state => redo(state, false),
-  icon: icons.redo
-})
+function redoItem(historyPlugin) {
+  return new MenuItem({
+    title: "Redo last undone change",
+    run: historyPlugin.redo,
+    select: state => historyPlugin.redo(state),
+    icon: icons.redo
+  })
+}
 exports.redoItem = redoItem
 
 function markActive(state, type) {
@@ -361,7 +364,7 @@ function toggleMarkItem(markType, options) {
   let base = {
     run: command,
     active(state) { return markActive(state, markType) },
-    select(state) { return command(state, false) }
+    select(state) { return command(state) }
   }
   /* FIXME
   if (options.attrs instanceof Function) base.run = pm => {
@@ -390,10 +393,10 @@ function insertItem(nodeType, options) {
           return true
       }
     },
-    run(state) {
+    run(state, onAction) {
       // FIXME
       //if (options.attrs instanceof Function) options.attrs(state, done)
-      return state.tr.replaceSelection(nodeType.createAndFill(options.attrs)).apply()
+      return onAction(state.tr.replaceSelection(nodeType.createAndFill(options.attrs)).action())
     }
   }))
 }
@@ -406,12 +409,12 @@ exports.insertItem = insertItem
 // `toggleMarkItem`.
 function wrapItem(nodeType, options) {
   return new MenuItem(copyObj(options, {
-    run(state) {
+    run(state, onAction) {
       // FIXME if (options.attrs instanceof Function) options.attrs(state, attrs => wrapIn(nodeType, attrs)(state))
-      return wrapIn(nodeType, options.attrs)(state)
+      return wrapIn(nodeType, options.attrs)(state, onAction)
     },
     select(state) {
-      return wrapIn(nodeType, options.attrs instanceof Function ? null : options.attrs)(state, false)
+      return wrapIn(nodeType, options.attrs instanceof Function ? null : options.attrs)(state)
     }
   }))
 }
@@ -426,7 +429,7 @@ function blockTypeItem(nodeType, options) {
   let command = setBlockType(nodeType, options.attrs)
   return new MenuItem(copyObj(options, {
     run: command,
-    select(state) { return command(state, false) },
+    select(state) { return command(state) },
     active(state) {
       let {$from, to, node} = state.selection
       if (node) return node.hasMarkup(nodeType, options.attrs)
