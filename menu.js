@@ -1,5 +1,5 @@
 const {elt, insertCSS} = require("../util/dom")
-const {lift, joinUp, selectParentNode, wrapIn, setBlockType, toggleMark} = require("../commands")
+const {lift, joinUp, selectParentNode, wrapIn, setBlockType} = require("../commands")
 const {copyObj} = require("../util/obj")
 
 const {getIcon} = require("./icons")
@@ -346,61 +346,6 @@ function redoItem(historyPlugin) {
   })
 }
 exports.redoItem = redoItem
-
-function markActive(state, type) {
-  let {from, to, empty} = state.selection
-  if (empty) return type.isInSet(state.storedMarks || state.doc.marksAt(from))
-  else return state.doc.rangeHasMark(from, to, type)
-}
-
-// :: (MarkType, Object) → MenuItem
-// Create a menu item for toggling a mark on the selection. Will create
-// `run`, `active`, and `select` properties. Other properties have to
-// be supplied in the `options` object. When `options.attrs` is a
-// function, FIXME. Otherwise, it may be an object
-// providing the attributes directly.
-function toggleMarkItem(markType, options) {
-  let command = toggleMark(markType, options.attrs)
-  let base = {
-    run: command,
-    active(state) { return markActive(state, markType) },
-    select(state) { return command(state) }
-  }
-  /* FIXME
-  if (options.attrs instanceof Function) base.run = pm => {
-    if (markActive(pm, markType)) command(pm)
-    else options.attrs(pm, attrs => toggleMark(markType, attrs)(pm))
-  }
-  */
-  return new MenuItem(copyObj(options, base))
-}
-exports.toggleMarkItem = toggleMarkItem
-
-// :: (NodeType, Object) → MenuItem
-// Create a menu item for inserting a node of the given type. Adds
-// `run` and `select` properties to the ones provided in `options`.
-// `options.attrs` can be an object or a function, like in
-// `toggleMarkItem`.
-function insertItem(nodeType, options) {
-  return new MenuItem(copyObj(options, {
-    select(state) {
-      let $from = state.selection.$from
-      for (let d = $from.depth; d >= 0; d--) {
-        let index = $from.index(d)
-        if ($from.node(d).canReplaceWith(index, index, nodeType,
-                                         // FIXME
-                                         options.attrs instanceof Function ? null : options.attrs))
-          return true
-      }
-    },
-    run(state, onAction) {
-      // FIXME
-      //if (options.attrs instanceof Function) options.attrs(state, done)
-      return onAction(state.tr.replaceSelection(nodeType.createAndFill(options.attrs)).action())
-    }
-  }))
-}
-exports.insertItem = insertItem
 
 // :: (NodeType, Object) → MenuItem
 // Build a menu item for wrapping the selection in a given node type.
