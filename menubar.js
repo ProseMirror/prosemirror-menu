@@ -4,12 +4,28 @@ const {renderGrouped} = require("./menu")
 
 const prefix = "ProseMirror-menubar"
 
-class MenuBar {
-  constructor(view, state, props) {
+exports.menuBar = function(options) {
+  return {
+    createView(editorView, state) {
+      return new BarView(editorView, state, options)
+    },
+
+    updateView(view, oldState, newState) {
+      view.update(oldState, newState)
+    },
+
+    destroyView(view) {
+      view.destroy()
+    }
+  }
+}
+
+class BarView {
+  constructor(editorView, state, options) {
     this.wrapper = elt("div", {class: prefix})
     this.spacer = null
 
-    view.wrapper.insertBefore(this.wrapper, view.wrapper.firstChild)
+    editorView.wrapper.insertBefore(this.wrapper, editorView.wrapper.firstChild)
 
     this.maxHeight = 0
     this.widthForMaxHeight = 0
@@ -18,7 +34,7 @@ class MenuBar {
     this.props = null
     this.update(state, props)
 
-    if (props.float) {
+    if (options.float) {
       this.updateFloat()
       let scrollFunc = () => {
         if (!document.body.contains(this.wrapper))
@@ -30,8 +46,7 @@ class MenuBar {
     }
   }
 
-  update(state, props) {
-    if (props) this.props = props
+  update(state) {
     this.wrapper.textContent = ""
     this.wrapper.appendChild(renderGrouped(state, this.props, this.props.content))
 
