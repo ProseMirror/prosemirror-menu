@@ -10,8 +10,8 @@ exports.menuBar = function(options) {
       return new BarView(editorView, state, options)
     },
 
-    updateView(view, oldState, newState) {
-      view.update(oldState, newState)
+    updateView(view, _, newState, props) {
+      view.update(newState, props)
     },
 
     destroyView(view) {
@@ -30,25 +30,31 @@ class BarView {
     this.maxHeight = 0
     this.widthForMaxHeight = 0
     this.floating = false
+    this.content = options.content
 
-    this.props = null
-    this.update(state, props)
+    this.update(state, editorView.props)
 
     if (options.float) {
       this.updateFloat()
-      let scrollFunc = () => {
+      this.scrollFunc = () => {
         if (!document.body.contains(this.wrapper))
-          window.removeEventListener("scroll", scrollFunc)
+          window.removeEventListener("scroll", this.scrollFunc)
         else
           this.updateFloat()
       }
-      window.addEventListener("scroll", scrollFunc)
+      window.addEventListener("scroll", this.scrollFunc)
     }
   }
 
-  update(state) {
+  destroy() {
+    this.wrapper.parentNode.removeChild(this.wrapper)
+    if (this.spacer) this.spacer.parentNode.removeChild(this.spacer)
+    if (this.scrollFunc) window.removeEventListener("scroll", this.scrollFunc)
+  }
+
+  update(state, props) {
     this.wrapper.textContent = ""
-    this.wrapper.appendChild(renderGrouped(state, this.props, this.props.content))
+    this.wrapper.appendChild(renderGrouped(state, props, this.content))
 
     if (this.floating) {
       this.updateScrollCursor()
@@ -104,7 +110,6 @@ class BarView {
     }
   }
 }
-exports.MenuBar = MenuBar
 
 // Not precise, but close enough
 function selectionIsInverted(selection) {
