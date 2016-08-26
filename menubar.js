@@ -25,6 +25,7 @@ class BarView {
     this.wrapper = elt("div", {class: prefix})
     this.spacer = null
 
+    this.editorView = editorView
     editorView.wrapper.insertBefore(this.wrapper, editorView.wrapper.firstChild)
 
     this.maxHeight = 0
@@ -71,7 +72,7 @@ class BarView {
   }
 
   updateScrollCursor() {
-    let selection = window.getSelection()
+    let selection = this.editorView.root.getSelection()
     if (!selection.focusNode) return
     let rects = selection.getRangeAt(0).getClientRects()
     let selRect = rects[selectionIsInverted(selection) ? 0 : rects.length - 1]
