@@ -24,7 +24,7 @@ class MenuBarEditorView {
     this.floating = false
 
     this.props = props
-    this.updateMenu(state, props)
+    this.updateMenu()
 
     if (this.editor.someProp("floatingMenu")) {
       this.updateFloat()
@@ -41,12 +41,12 @@ class MenuBarEditorView {
   update(state, newProps) {
     if (newProps) this.props = newProps
     this.editor.update(state, newProps)
-    this.updateMenu(state, this.props)
+    this.updateMenu()
   }
 
-  updateMenu(state, props) {
+  updateMenu() {
     this.menu.textContent = ""
-    this.menu.appendChild(renderGrouped(state, props, this.editor.someProp("menuContent")))
+    this.menu.appendChild(renderGrouped(this.editor, this.editor.someProp("menuContent")))
 
     if (this.floating) {
       this.updateScrollCursor()

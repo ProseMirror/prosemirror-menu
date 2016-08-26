@@ -19,50 +19,50 @@ class MenuItem {
   // Renders the icon according to its [display
   // spec](#MenuItemSpec.display), and adds an event handler which
   // executes the command when the representation is clicked.
-  render(state, props) {
+  render(view) {
     let disabled = false, spec = this.spec
-    if (spec.select && !spec.select(state)) {
+    if (spec.select && !spec.select(view.state)) {
       if (spec.onDeselected == "disable") disabled = true
       else return null
     }
-    let active = spec.active && !disabled && spec.active(state)
+    let active = spec.active && !disabled && spec.active(view.state)
 
     let dom
     if (spec.render) {
-      dom = spec.render(state, props)
+      dom = spec.render(view)
     } else if (spec.icon) {
       dom = getIcon(spec.icon)
       if (active) dom.classList.add(prefix + "-active")
     } else if (spec.label) {
-      dom = elt("div", null, translate(props, spec.label))
+      dom = elt("div", null, translate(view, spec.label))
     } else {
       throw new RangeError("MenuItem without render, icon, or label property")
     }
 
-    if (spec.title) dom.setAttribute("title", translate(props, spec.title))
+    if (spec.title) dom.setAttribute("title", translate(view, spec.title))
     if (spec.class) dom.classList.add(spec.class)
     if (disabled) dom.classList.add(prefix + "-disabled")
     if (spec.css) dom.style.cssText += spec.css
     if (!disabled) dom.addEventListener(spec.execEvent || "mousedown", e => {
       e.preventDefault(); e.stopPropagation()
-      spec.run(state, props.onAction)
+      spec.run(view.state, view.props.onAction, view)
     })
     return dom
   }
 }
 exports.MenuItem = MenuItem
 
-function translate(props, text) {
-  return props.translate ? props.translate(text) : text
+function translate(view, text) {
+  return view.props.translate ? view.props.translate(text) : text
 }
 
 // :: Object #path=MenuItemSpec #kind=interface
 // The configuration object passed to the `MenuItem` constructor.
 
-// :: (ProseMirror) #path=MenuItemSpec.run
+// :: (EditorState, (Action), EditorView) #path=MenuItemSpec.run
 // The function to execute when the menu item is activated.
 
-// :: ?(ProseMirror) → bool #path=MenuItemSpec.select
+// :: ?(EditorState) → bool #path=MenuItemSpec.select
 // Optional function that is used to determine whether the item is
 // appropriate at the moment.
 
@@ -71,12 +71,12 @@ function translate(props, text) {
 // returns false. The default is to hide the item, you can set this to
 // `"disable"` to instead render the item with a disabled style.
 
-// :: ?(ProseMirror) → bool #path=MenuItemSpec.active
+// :: ?(EditorState) → bool #path=MenuItemSpec.active
 // A predicate function to determine whether the item is 'active' (for
 // example, the item for toggling the strong mark might be active then
 // the cursor is in strong text).
 
-// :: ?(ProseMirror) → DOMNode #path=MenuItemSpec.render
+// :: ?(EditorView) → DOMNode #path=MenuItemSpec.render
 // A function that renders the item. You must provide either this,
 // [`icon`](#MenuItemSpec.icon), or [`label`](#MenuItemSpec.label).
 
@@ -135,16 +135,16 @@ class Dropdown {
     this.content = Array.isArray(content) ? content : [content]
   }
 
-  // :: (ProseMirror) → DOMNode
+  // :: (EditorView) → DOMNode
   // Returns a node showing the collapsed menu, which expands when clicked.
-  render(state, props) {
-    let items = renderDropdownItems(this.content, state, props)
+  render(view) {
+    let items = renderDropdownItems(this.content, view)
     if (!items.length) return null
 
     let dom = elt("div", {class: prefix + "-dropdown " + (this.options.class || ""),
                           style: this.options.css,
-                          title: this.options.title && translate(props, this.options.title)},
-                  translate(props, this.options.label))
+                          title: this.options.title && translate(view, this.options.title)},
+                  translate(view, this.options.label))
     let open = null
     dom.addEventListener("mousedown", e => {
       e.preventDefault(); e.stopPropagation()
@@ -170,10 +170,10 @@ class Dropdown {
 }
 exports.Dropdown = Dropdown
 
-function renderDropdownItems(items, state, props) {
+function renderDropdownItems(items, view) {
   let rendered = []
   for (let i = 0; i < items.length; i++) {
-    let inner = items[i].render(state, props)
+    let inner = items[i].render(view)
     if (inner) rendered.push(elt("div", {class: prefix + "-dropdown-item"}, inner))
   }
   return rendered
@@ -193,13 +193,13 @@ class DropdownSubmenu {
     this.content = Array.isArray(content) ? content : [content]
   }
 
-  // :: (ProseMirror) → DOMNode
+  // :: (EditorView) → DOMNode
   // Renders the submenu.
-  render(state, props) {
-    let items = renderDropdownItems(this.content, state, props)
+  render(view) {
+    let items = renderDropdownItems(this.content, view)
     if (!items.length) return null
 
-    let label = elt("div", {class: prefix + "-submenu-label"}, translate(props, this.options.label))
+    let label = elt("div", {class: prefix + "-submenu-label"}, translate(view, this.options.label))
     let wrap = elt("div", {class: prefix + "-submenu-wrap"}, label,
                    elt("div", {class: prefix + "-submenu"}, items))
     label.addEventListener("mousedown", e => {
@@ -211,17 +211,17 @@ class DropdownSubmenu {
 }
 exports.DropdownSubmenu = DropdownSubmenu
 
-// :: (ProseMirror, [union<MenuElement, [MenuElement]>]) → ?DOMFragment
+// :: (EditorView, [union<MenuElement, [MenuElement]>]) → ?DOMFragment
 // Render the given, possibly nested, array of menu elements into a
 // document fragment, placing separators between them (and ensuring no
 // superfluous separators appear when some of the groups turn out to
 // be empty).
-function renderGrouped(state, props, content) {
+function renderGrouped(view, content) {
   let result = document.createDocumentFragment(), needSep = false
   for (let i = 0; i < content.length; i++) {
     let items = content[i], added = false
     for (let j = 0; j < items.length; j++) {
-      let rendered = items[j].render(state, props)
+      let rendered = items[j].render(view)
       if (rendered) {
         if (!added && needSep) result.appendChild(separator())
         result.appendChild(elt("span", {class: prefix + "item"}, rendered))
