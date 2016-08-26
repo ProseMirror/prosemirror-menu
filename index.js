@@ -1,7 +1,7 @@
 const {copyObj} = require("../util/obj")
 
 copyObj(require("./menu"), exports)
-exports.menuBar = require("./menubar").menuBar
+exports.MenuBarEditorView = require("./menubar").MenuBarEditorView
 
 // !! This module defines a number of building blocks for ProseMirror
 // menus, along with a [menu bar](#menuBar) implementation.

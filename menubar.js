@@ -1,44 +1,35 @@
-const {elt, insertCSS} = require("../util/dom")
+const {insertCSS} = require("../util/dom")
+const {EditorView} = require("../view")
 
 const {renderGrouped} = require("./menu")
 
 const prefix = "ProseMirror-menubar"
 
-exports.menuBar = function(options) {
-  return {
-    createView(editorView, state) {
-      return new BarView(editorView, state, options)
-    },
+class MenuBarEditorView {
+  constructor(place, state, props) {
+    this.wrapper = document.createElement("div")
+    this.wrapper.className = prefix + "-wrapper"
+    if (place.appendChild) place.appendChild(this.wrapper)
+    else if (place) place(this.wrapper)
+    this.editor = new EditorView(this.wrapper, state, props)
 
-    updateView(view, _, newState, props) {
-      view.update(newState, props)
-    },
-
-    destroyView(view) {
-      view.destroy()
-    }
-  }
-}
-
-class BarView {
-  constructor(editorView, state, options) {
-    this.wrapper = elt("div", {class: prefix})
+    this.menu = document.createElement("div")
+    this.menu.className = prefix
     this.spacer = null
 
-    this.editorView = editorView
-    editorView.wrapper.insertBefore(this.wrapper, editorView.wrapper.firstChild)
+    this.wrapper.insertBefore(this.menu, this.wrapper.firstChild)
 
     this.maxHeight = 0
     this.widthForMaxHeight = 0
     this.floating = false
-    this.content = options.content
 
-    this.update(state, editorView.props)
+    this.props = props
+    this.updateMenu(state, props)
 
-    if (options.float) {
+    if (this.editor.someProp("floatingMenu")) {
       this.updateFloat()
       this.scrollFunc = () => {
-        if (!document.body.contains(this.wrapper))
+        if (!this.editor.root.contains(this.wrapper))
           window.removeEventListener("scroll", this.scrollFunc)
         else
           this.updateFloat()
@@ -47,32 +38,33 @@ class BarView {
     }
   }
 
-  destroy() {
-    this.wrapper.parentNode.removeChild(this.wrapper)
-    if (this.spacer) this.spacer.parentNode.removeChild(this.spacer)
-    if (this.scrollFunc) window.removeEventListener("scroll", this.scrollFunc)
+  update(state, newProps) {
+    if (newProps) this.props = newProps
+    this.editor.update(state, newProps)
+    this.updateMenu(state, this.props)
   }
 
-  update(state, props) {
-    this.wrapper.textContent = ""
-    this.wrapper.appendChild(renderGrouped(state, props, this.content))
+  updateMenu(state, props) {
+    this.menu.textContent = ""
+    this.menu.appendChild(renderGrouped(state, props, this.editor.someProp("menuContent")))
 
     if (this.floating) {
       this.updateScrollCursor()
     } else {
-      if (this.wrapper.offsetWidth != this.widthForMaxHeight) {
-        this.widthForMaxHeight = this.wrapper.offsetWidth
+      if (this.menu.offsetWidth != this.widthForMaxHeight) {
+        this.widthForMaxHeight = this.menu.offsetWidth
         this.maxHeight = 0
       }
-      if (this.wrapper.offsetHeight > this.maxHeight) {
-        this.maxHeight = this.wrapper.offsetHeight
-        this.wrapper.style.minHeight = this.maxHeight + "px"
+      if (this.menu.offsetHeight > this.maxHeight) {
+        this.maxHeight = this.menu.offsetHeight
+        this.menu.style.minHeight = this.maxHeight + "px"
       }
     }
   }
 
+
   updateScrollCursor() {
-    let selection = this.editorView.root.getSelection()
+    let selection = this.editor.root.getSelection()
     if (!selection.focusNode) return
     let rects = selection.getRangeAt(0).getClientRects()
     let selRect = rects[selectionIsInverted(selection) ? 0 : rects.length - 1]
@@ -85,32 +77,35 @@ class BarView {
   }
 
   updateFloat() {
-    let parent = this.wrapper.parentNode, editorRect = parent.getBoundingClientRect()
+    let parent = this.wrapper, editorRect = parent.getBoundingClientRect()
     if (this.floating) {
-      if (editorRect.top >= 0 || editorRect.bottom < this.wrapper.offsetHeight + 10) {
+      if (editorRect.top >= 0 || editorRect.bottom < this.menu.offsetHeight + 10) {
         this.floating = false
-        this.wrapper.style.position = this.wrapper.style.left = this.wrapper.style.width = ""
-        this.wrapper.style.display = ""
+        this.menu.style.position = this.menu.style.left = this.menu.style.width = ""
+        this.menu.style.display = ""
         this.spacer.parentNode.removeChild(this.spacer)
         this.spacer = null
       } else {
         let border = (parent.offsetWidth - parent.clientWidth) / 2
-        this.wrapper.style.left = (editorRect.left + border) + "px"
-        this.wrapper.style.display = (editorRect.top > window.innerHeight ? "none" : "")
+        this.menu.style.left = (editorRect.left + border) + "px"
+        this.menu.style.display = (editorRect.top > window.innerHeight ? "none" : "")
       }
     } else {
-      if (editorRect.top < 0 && editorRect.bottom >= this.wrapper.offsetHeight + 10) {
+      if (editorRect.top < 0 && editorRect.bottom >= this.menu.offsetHeight + 10) {
         this.floating = true
-        let menuRect = this.wrapper.getBoundingClientRect()
-        this.wrapper.style.left = menuRect.left + "px"
-        this.wrapper.style.width = menuRect.width + "px"
-        this.wrapper.style.position = "fixed"
-        this.spacer = elt("div", {class: prefix + "-spacer", style: "height: " + menuRect.height + "px"})
-        parent.insertBefore(this.spacer, this.wrapper)
+        let menuRect = this.menu.getBoundingClientRect()
+        this.menu.style.left = menuRect.left + "px"
+        this.menu.style.width = menuRect.width + "px"
+        this.menu.style.position = "fixed"
+        this.spacer = document.createElement("div")
+        this.spacer.className = prefix + "-spacer"
+        this.spacer.style.height = menuRect.height + "px"
+        parent.insertBefore(this.spacer, this.menu)
       }
     }
   }
 }
+exports.MenuBarEditorView = MenuBarEditorView
 
 // Not precise, but close enough
 function selectionIsInverted(selection) {
