@@ -44,7 +44,7 @@ class MenuItem {
     if (disabled) dom.classList.add(prefix + "-disabled")
     if (spec.css) dom.style.cssText += spec.css
     if (!disabled) dom.addEventListener(spec.execEvent || "mousedown", e => {
-      e.preventDefault(); e.stopPropagation()
+      e.preventDefault()
       spec.run(view.state, view.props.onAction, view)
     })
     return dom
@@ -109,6 +109,15 @@ function translate(view, text) {
 // Defines which event on the command's DOM representation should
 // trigger the execution of the command. Defaults to mousedown.
 
+let lastMenuEvent = {time: 0, node: null}
+function markMenuEvent(e) {
+  lastMenuEvent.time = Date.now()
+  lastMenuEvent.node = e.target
+}
+function isMenuEvent(e, wrapper) {
+  return Date.now() - 100 < lastMenuEvent.time &&
+    lastMenuEvent.node && wrapper.contains(lastMenuEvent.node)
+}
 
 // ;; A drop-down menu, displayed as a label with a downwards-pointing
 // triangle to the right of it.
@@ -141,31 +150,45 @@ class Dropdown {
     let items = renderDropdownItems(this.content, view)
     if (!items.length) return null
 
-    let dom = elt("div", {class: prefix + "-dropdown " + (this.options.class || ""),
-                          style: this.options.css,
-                          title: this.options.title && translate(view, this.options.title)},
-                  translate(view, this.options.label))
-    let open = null
-    dom.addEventListener("mousedown", e => {
-      e.preventDefault(); e.stopPropagation()
-      if (open && open()) open = null
-      else open = this.expand(dom, items)
+    let label = elt("div", {class: prefix + "-dropdown " + (this.options.class || ""),
+                            style: this.options.css,
+                            title: this.options.title && translate(view, this.options.title)},
+                    translate(view, this.options.label))
+    let wrap = elt("div", {class: prefix + "-dropdown-wrap"}, label)
+    let open = null, listeningOnClose = null
+    let close = () => {
+      if (open && open.close()) {
+        open = null
+        window.removeEventListener("mousedown", listeningOnClose)
+      }
+    }
+    label.addEventListener("mousedown", e => {
+      e.preventDefault()
+      markMenuEvent(e)
+      if (open) {
+        close()
+      } else {
+        open = this.expand(wrap, items)
+        window.addEventListener("mousedown", listeningOnClose = e => {
+          if (!isMenuEvent(e, wrap)) close()
+        })
+      }
     })
-    return dom
+    return wrap
   }
 
   expand(dom, items) {
     let menuDOM = elt("div", {class: prefix + "-dropdown-menu " + (this.options.class || "")}, items)
 
     let done = false
-    function finish() {
+    function close() {
       if (done) return
       done = true
       dom.removeChild(menuDOM)
       return true
     }
     dom.appendChild(menuDOM)
-    return finish
+    return {close, node: menuDOM}
   }
 }
 exports.Dropdown = Dropdown
@@ -202,9 +225,19 @@ class DropdownSubmenu {
     let label = elt("div", {class: prefix + "-submenu-label"}, translate(view, this.options.label))
     let wrap = elt("div", {class: prefix + "-submenu-wrap"}, label,
                    elt("div", {class: prefix + "-submenu"}, items))
+    let listeningOnClose = null
     label.addEventListener("mousedown", e => {
-      e.preventDefault(); e.stopPropagation()
+      e.preventDefault()
+      markMenuEvent(e)
       wrap.classList.toggle(prefix + "-submenu-wrap-active")
+      if (!listeningOnClose)
+        window.addEventListener("mousedown", listeningOnClose = () => {
+          if (!isMenuEvent(e, wrap)) {
+            wrap.classList.remove(prefix + "-submenu-wrap-active")
+            window.removeEventListener("mousedown", listeningOnClose)
+            listeningOnClose = null
+          }
+        })
     })
     return wrap
   }
@@ -417,11 +450,14 @@ insertCSS(`
 }
 
 .${prefix}-dropdown {
+  vertical-align: 1px;
+  cursor: pointer;
+}
+
+.${prefix}-dropdown-wrap {
   padding: 1px 14px 1px 4px;
   display: inline-block;
-  vertical-align: 1px;
   position: relative;
-  cursor: pointer;
 }
 
 .${prefix}-dropdown:after {
