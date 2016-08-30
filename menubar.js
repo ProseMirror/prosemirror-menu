@@ -1,3 +1,4 @@
+const crel = require("crel")
 const {insertCSS} = require("../util/dom")
 const {EditorView} = require("../view")
 
@@ -7,13 +8,12 @@ const prefix = "ProseMirror-menubar"
 
 class MenuBarEditorView {
   constructor(place, state, props) {
-    this.wrapper = document.createElement("div")
-    this.wrapper.className = prefix + "-wrapper"
+    this.wrapper = crel("div", {class: prefix + "-wrapper"})
     if (place.appendChild) place.appendChild(this.wrapper)
     else if (place) place(this.wrapper)
     this.editor = new EditorView(this.wrapper, state, props)
 
-    this.menu = document.createElement("div")
+    this.menu = crel("div", {class: prefix})
     this.menu.className = prefix
     this.spacer = null
 
@@ -97,9 +97,7 @@ class MenuBarEditorView {
         this.menu.style.left = menuRect.left + "px"
         this.menu.style.width = menuRect.width + "px"
         this.menu.style.position = "fixed"
-        this.spacer = document.createElement("div")
-        this.spacer.className = prefix + "-spacer"
-        this.spacer.style.height = menuRect.height + "px"
+        this.spacer = crel("div", {class: prefix + "-spacer", style: `height: ${menuRect.height}px`})
         parent.insertBefore(this.spacer, this.menu)
       }
     }

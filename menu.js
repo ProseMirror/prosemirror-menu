@@ -1,4 +1,5 @@
-const {elt, insertCSS} = require("../util/dom")
+const {insertCSS} = require("../util/dom")
+const crel = require("crel")
 const {lift, joinUp, selectParentNode, wrapIn, setBlockType} = require("../commands")
 const {copyObj} = require("../util/obj")
 
@@ -34,7 +35,7 @@ class MenuItem {
       dom = getIcon(spec.icon)
       if (active) dom.classList.add(prefix + "-active")
     } else if (spec.label) {
-      dom = elt("div", null, translate(view, spec.label))
+      dom = crel("div", null, translate(view, spec.label))
     } else {
       throw new RangeError("MenuItem without render, icon, or label property")
     }
@@ -150,11 +151,11 @@ class Dropdown {
     let items = renderDropdownItems(this.content, view)
     if (!items.length) return null
 
-    let label = elt("div", {class: prefix + "-dropdown " + (this.options.class || ""),
-                            style: this.options.css,
-                            title: this.options.title && translate(view, this.options.title)},
+    let label = crel("div", {class: prefix + "-dropdown " + (this.options.class || ""),
+                             style: this.options.css,
+                             title: this.options.title && translate(view, this.options.title)},
                     translate(view, this.options.label))
-    let wrap = elt("div", {class: prefix + "-dropdown-wrap"}, label)
+    let wrap = crel("div", {class: prefix + "-dropdown-wrap"}, label)
     let open = null, listeningOnClose = null
     let close = () => {
       if (open && open.close()) {
@@ -178,7 +179,7 @@ class Dropdown {
   }
 
   expand(dom, items) {
-    let menuDOM = elt("div", {class: prefix + "-dropdown-menu " + (this.options.class || "")}, items)
+    let menuDOM = crel("div", {class: prefix + "-dropdown-menu " + (this.options.class || "")}, items)
 
     let done = false
     function close() {
@@ -197,7 +198,7 @@ function renderDropdownItems(items, view) {
   let rendered = []
   for (let i = 0; i < items.length; i++) {
     let inner = items[i].render(view)
-    if (inner) rendered.push(elt("div", {class: prefix + "-dropdown-item"}, inner))
+    if (inner) rendered.push(crel("div", {class: prefix + "-dropdown-item"}, inner))
   }
   return rendered
 }
@@ -222,9 +223,9 @@ class DropdownSubmenu {
     let items = renderDropdownItems(this.content, view)
     if (!items.length) return null
 
-    let label = elt("div", {class: prefix + "-submenu-label"}, translate(view, this.options.label))
-    let wrap = elt("div", {class: prefix + "-submenu-wrap"}, label,
-                   elt("div", {class: prefix + "-submenu"}, items))
+    let label = crel("div", {class: prefix + "-submenu-label"}, translate(view, this.options.label))
+    let wrap = crel("div", {class: prefix + "-submenu-wrap"}, label,
+                   crel("div", {class: prefix + "-submenu"}, items))
     let listeningOnClose = null
     label.addEventListener("mousedown", e => {
       e.preventDefault()
@@ -257,7 +258,7 @@ function renderGrouped(view, content) {
       let rendered = items[j].render(view)
       if (rendered) {
         if (!added && needSep) result.appendChild(separator())
-        result.appendChild(elt("span", {class: prefix + "item"}, rendered))
+        result.appendChild(crel("span", {class: prefix + "item"}, rendered))
         added = true
       }
     }
@@ -268,7 +269,7 @@ function renderGrouped(view, content) {
 exports.renderGrouped = renderGrouped
 
 function separator() {
-  return elt("span", {class: prefix + "separator"})
+  return crel("span", {class: prefix + "separator"})
 }
 
 // :: Object
