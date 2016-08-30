@@ -69,7 +69,7 @@ class MenuBarEditorView {
     let rects = selection.getRangeAt(0).getClientRects()
     let selRect = rects[selectionIsInverted(selection) ? 0 : rects.length - 1]
     if (!selRect) return
-    let menuRect = this.wrapper.getBoundingClientRect()
+    let menuRect = this.menu.getBoundingClientRect()
     if (selRect.top < menuRect.bottom && selRect.bottom > menuRect.top) {
       let scrollable = findWrappingScrollable(this.wrapper)
       if (scrollable) scrollable.scrollTop -= (menuRect.bottom - selRect.top)
