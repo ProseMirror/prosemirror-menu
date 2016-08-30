@@ -1,5 +1,4 @@
 const crel = require("crel")
-const {insertCSS} = require("../util/dom")
 const {EditorView} = require("../view")
 
 const {renderGrouped} = require("./menu")
@@ -115,21 +114,3 @@ function findWrappingScrollable(node) {
   for (let cur = node.parentNode; cur; cur = cur.parentNode)
     if (cur.scrollHeight > cur.clientHeight) return cur
 }
-
-insertCSS(`
-.${prefix} {
-  border-top-left-radius: inherit;
-  border-top-right-radius: inherit;
-  position: relative;
-  min-height: 1em;
-  color: #666;
-  padding: 1px 6px;
-  top: 0; left: 0; right: 0;
-  border-bottom: 1px solid silver;
-  background: white;
-  z-index: 10;
-  -moz-box-sizing: border-box;
-  box-sizing: border-box;
-  overflow: visible;
-}
-`)

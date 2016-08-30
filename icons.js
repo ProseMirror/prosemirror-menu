@@ -1,5 +1,3 @@
-const {insertCSS} = require("../util/dom")
-
 const SVG = "http://www.w3.org/2000/svg"
 const XLINK = "http://www.w3.org/1999/xlink"
 
@@ -47,21 +45,3 @@ function buildSVG(name, data) {
   path.setAttribute("d", data.path)
   collection.appendChild(sym)
 }
-
-insertCSS(`
-.${prefix} {
-  display: inline-block;
-  line-height: .8;
-  vertical-align: -2px; /* Compensate for padding */
-  padding: 2px 8px;
-  cursor: pointer;
-}
-
-.${prefix} svg {
-  fill: currentColor;
-  height: 1em;
-}
-
-.${prefix} span {
-  vertical-align: text-top;
-}`)
