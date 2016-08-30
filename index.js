@@ -1,6 +1,8 @@
-const {copyObj} = require("../util/obj")
-
-copyObj(require("./menu"), exports)
+;({MenuItem: exports.MenuItem, Dropdown: exports.Dropdown, DropdownSubmenu: exports.DropdownSubmenu,
+   renderGrouped: exports.renderGrouped, icons: exports.icons, joinUpItem: exports.joinUpItem,
+   liftItem: exports.liftItem, selectParentNodeItem: exports.selectParentNodeItem,
+   undoItem: exports.undoItem, redoItem: exports.redoItem, wrapItem: exports.wrapItem,
+   blockTypeItem: exports.blockTypeItem} = require("./menu"))
 exports.MenuBarEditorView = require("./menubar").MenuBarEditorView
 
 // !! This module defines a number of building blocks for ProseMirror

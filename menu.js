@@ -1,6 +1,5 @@
 const crel = require("crel")
 const {lift, joinUp, selectParentNode, wrapIn, setBlockType} = require("../commands")
-const {copyObj} = require("../util/obj")
 
 const {getIcon} = require("./icons")
 
@@ -386,7 +385,7 @@ exports.redoItem = redoItem
 // `options`. `options.attrs` may be an object or a function, as in
 // `toggleMarkItem`.
 function wrapItem(nodeType, options) {
-  return new MenuItem(copyObj(options, {
+  let passedOptions = {
     run(state, onAction) {
       // FIXME if (options.attrs instanceof Function) options.attrs(state, attrs => wrapIn(nodeType, attrs)(state))
       return wrapIn(nodeType, options.attrs)(state, onAction)
@@ -394,7 +393,9 @@ function wrapItem(nodeType, options) {
     select(state) {
       return wrapIn(nodeType, options.attrs instanceof Function ? null : options.attrs)(state)
     }
-  }))
+  }
+  for (let prop in options) passedOptions[prop] = options[prop]
+  return new MenuItem(passedOptions)
 }
 exports.wrapItem = wrapItem
 
@@ -405,7 +406,7 @@ exports.wrapItem = wrapItem
 // be an object to provide the attributes for the textblock node.
 function blockTypeItem(nodeType, options) {
   let command = setBlockType(nodeType, options.attrs)
-  return new MenuItem(copyObj(options, {
+  let passedOptions = {
     run: command,
     select(state) { return command(state) },
     active(state) {
@@ -413,6 +414,8 @@ function blockTypeItem(nodeType, options) {
       if (node) return node.hasMarkup(nodeType, options.attrs)
       return to <= $from.end() && $from.parent.hasMarkup(nodeType, options.attrs)
     }
-  }))
+  }
+  for (let prop in options) passedOptions[prop] = options[prop]
+  return new MenuItem(passedOptions)
 }
 exports.blockTypeItem = blockTypeItem
