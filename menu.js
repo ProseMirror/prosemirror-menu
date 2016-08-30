@@ -114,7 +114,7 @@ function markMenuEvent(e) {
   lastMenuEvent.time = Date.now()
   lastMenuEvent.node = e.target
 }
-function isMenuEvent(e, wrapper) {
+function isMenuEvent(wrapper) {
   return Date.now() - 100 < lastMenuEvent.time &&
     lastMenuEvent.node && wrapper.contains(lastMenuEvent.node)
 }
@@ -169,8 +169,8 @@ class Dropdown {
         close()
       } else {
         open = this.expand(wrap, items)
-        window.addEventListener("mousedown", listeningOnClose = e => {
-          if (!isMenuEvent(e, wrap)) close()
+        window.addEventListener("mousedown", listeningOnClose = () => {
+          if (!isMenuEvent(wrap)) close()
         })
       }
     })
@@ -232,7 +232,7 @@ class DropdownSubmenu {
       wrap.classList.toggle(prefix + "-submenu-wrap-active")
       if (!listeningOnClose)
         window.addEventListener("mousedown", listeningOnClose = () => {
-          if (!isMenuEvent(e, wrap)) {
+          if (!isMenuEvent(wrap)) {
             wrap.classList.remove(prefix + "-submenu-wrap-active")
             window.removeEventListener("mousedown", listeningOnClose)
             listeningOnClose = null
