@@ -16,7 +16,7 @@ class MenuItem {
 
   // :: (EditorView) → dom.Node
   // Renders the icon according to its [display
-  // spec](#MenuItemSpec.display), and adds an event handler which
+  // spec](#menu.MenuItemSpec.display), and adds an event handler which
   // executes the command when the representation is clicked.
   render(view) {
     let disabled = false, spec = this.spec
@@ -66,7 +66,7 @@ function translate(view, text) {
 //   appropriate at the moment.
 //
 //   onDeselect:: ?string
-//   Determines what happens when [`select`](#MenuItemSpec.select)
+//   Determines what happens when [`select`](#menu.MenuItemSpec.select)
 //   returns false. The default is to hide the item, you can set this to
 //   `"disable"` to instead render the item with a disabled style.
 //
@@ -77,7 +77,7 @@ function translate(view, text) {
 //
 //   render:: ?(EditorView) → dom.Node
 //   A function that renders the item. You must provide either this,
-//   [`icon`](#MenuItemSpec.icon), or [`label`](#MenuItemSpec.label).
+//   [`icon`](#menu.MenuItemSpec.icon), or [`label`](#MenuItemSpec.label).
 //
 //   icon:: ?Object
 //   Describes an icon to show for this item. The object may specify
@@ -92,7 +92,7 @@ function translate(view, text) {
 //
 //   label:: ?string
 //   Makes the item show up as a text label. Mostly useful for items
-//   wrapped in a [drop-down](#Dropdown) or similar menu. The object
+//   wrapped in a [drop-down](#menu.Dropdown) or similar menu. The object
 //   should have a `label` property providing the text to display.
 //
 //   title:: ?string

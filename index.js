@@ -6,7 +6,7 @@
 exports.MenuBarEditorView = require("./menubar").MenuBarEditorView
 
 // !! This module defines a number of building blocks for ProseMirror
-// menus, along with a [menu bar](#MenuBarEditorView) implementation.
+// menus, along with a [menu bar](#menu.MenuBarEditorView) implementation.
 
 // MenuElement:: interface
 // The types defined in this module aren't the only thing you can
