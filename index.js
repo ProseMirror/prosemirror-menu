@@ -6,14 +6,14 @@
 exports.MenuBarEditorView = require("./menubar").MenuBarEditorView
 
 // !! This module defines a number of building blocks for ProseMirror
-// menus, along with a [menu bar](#menuBar) implementation.
+// menus, along with a [menu bar](#MenuBarEditorView) implementation.
 
-// ;; #path=MenuElement #kind=interface
+// MenuElement:: interface
 // The types defined in this module aren't the only thing you can
 // display in your menu. Anything that conforms to this interface can
 // be put into a menu structure.
-
-// :: (pm: ProseMirror) → ?DOMNode #path=MenuElement.render
-// Render the element for display in the menu. Returning `null` can be
-// used to signal that this element shouldn't be displayed for the
-// given editor state.
+//
+//   render:: (pm: ProseMirror) → ?DOMNode
+//   Render the element for display in the menu. Returning `null` can be
+//   used to signal that this element shouldn't be displayed for the
+//   given editor state.

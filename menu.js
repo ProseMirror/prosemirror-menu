@@ -5,7 +5,7 @@ const {getIcon} = require("./icons")
 
 const prefix = "ProseMirror-menu"
 
-// ;; An icon or label that, when clicked, executes a command.
+// ::- An icon or label that, when clicked, executes a command.
 class MenuItem {
   // :: (MenuItemSpec)
   constructor(spec) {
@@ -55,58 +55,59 @@ function translate(view, text) {
   return view.props.translate ? view.props.translate(text) : text
 }
 
-// :: Object #path=MenuItemSpec #kind=interface
+// MenuItemSpec:: interface
 // The configuration object passed to the `MenuItem` constructor.
-
-// :: (EditorState, (Action), EditorView) #path=MenuItemSpec.run
-// The function to execute when the menu item is activated.
-
-// :: ?(EditorState) → bool #path=MenuItemSpec.select
-// Optional function that is used to determine whether the item is
-// appropriate at the moment.
-
-// :: ?string #path=MenuItemSpec.onDeselect
-// Determines what happens when [`select`](#MenuItemSpec.select)
-// returns false. The default is to hide the item, you can set this to
-// `"disable"` to instead render the item with a disabled style.
-
-// :: ?(EditorState) → bool #path=MenuItemSpec.active
-// A predicate function to determine whether the item is 'active' (for
-// example, the item for toggling the strong mark might be active then
-// the cursor is in strong text).
-
-// :: ?(EditorView) → DOMNode #path=MenuItemSpec.render
-// A function that renders the item. You must provide either this,
-// [`icon`](#MenuItemSpec.icon), or [`label`](#MenuItemSpec.label).
-
-// :: ?Object #path=MenuItemSpec.icon
-// Describes an icon to show for this item. The object may specify an
-// SVG icon, in which case its `path` property should be an [SVG path
-// spec](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d),
-// and `width` and `height` should provide the viewbox in which that
-// path exists. Alternatively, it may have a `text` property
-// specifying a string of text that makes up the icon, with an
-// optional `css` property giving additional CSS styling for the text.
-// _Or_ it may contain `dom` property containing a DOM node.
-
-// :: ?string #path=MenuItemSpec.label
-// Makes the item show up as a text label. Mostly useful for items
-// wrapped in a [drop-down](#Dropdown) or similar menu. The object
-// should have a `label` property providing the text to display.
-
-// :: ?string #path=MenuItemSpec.title
-// Defines DOM title (mouseover) text for the item.
-
-// :: string #path=MenuItemSpec.class
-// Optionally adds a CSS class to the item's DOM representation.
-
-// :: string #path=MenuItemSpec.css
-// Optionally adds a string of inline CSS to the item's DOM
-// representation.
-
-// :: string #path=MenuItemSpec.execEvent
-// Defines which event on the command's DOM representation should
-// trigger the execution of the command. Defaults to mousedown.
+//
+//   run:: (EditorState, (Action), EditorView)
+//   The function to execute when the menu item is activated.
+//
+//   select:: ?(EditorState) → bool
+//   Optional function that is used to determine whether the item is
+//   appropriate at the moment.
+//
+//   onDeselect:: ?string
+//   Determines what happens when [`select`](#MenuItemSpec.select)
+//   returns false. The default is to hide the item, you can set this to
+//   `"disable"` to instead render the item with a disabled style.
+//
+//   active:: ?(EditorState) → bool
+//   A predicate function to determine whether the item is 'active' (for
+//   example, the item for toggling the strong mark might be active then
+//   the cursor is in strong text).
+//
+//   render:: ?(EditorView) → DOMNode
+//   A function that renders the item. You must provide either this,
+//   [`icon`](#MenuItemSpec.icon), or [`label`](#MenuItemSpec.label).
+//
+//   icon:: ?Object
+//   Describes an icon to show for this item. The object may specify
+//   an SVG icon, in which case its `path` property should be an [SVG
+//   path
+//   spec](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d),
+//   and `width` and `height` should provide the viewbox in which that
+//   path exists. Alternatively, it may have a `text` property
+//   specifying a string of text that makes up the icon, with an
+//   optional `css` property giving additional CSS styling for the
+//   text. _Or_ it may contain `dom` property containing a DOM node.
+//
+//   label:: ?string
+//   Makes the item show up as a text label. Mostly useful for items
+//   wrapped in a [drop-down](#Dropdown) or similar menu. The object
+//   should have a `label` property providing the text to display.
+//
+//   title:: ?string
+//   Defines DOM title (mouseover) text for the item.
+//
+//   class:: string
+//   Optionally adds a CSS class to the item's DOM representation.
+//
+//   css:: string
+//   Optionally adds a string of inline CSS to the item's DOM
+//   representation.
+//
+//   execEvent:: string
+//   Defines which event on the command's DOM representation should
+//   trigger the execution of the command. Defaults to mousedown.
 
 let lastMenuEvent = {time: 0, node: null}
 function markMenuEvent(e) {
@@ -118,7 +119,7 @@ function isMenuEvent(wrapper) {
     lastMenuEvent.node && wrapper.contains(lastMenuEvent.node)
 }
 
-// ;; A drop-down menu, displayed as a label with a downwards-pointing
+// ::- A drop-down menu, displayed as a label with a downwards-pointing
 // triangle to the right of it.
 class Dropdown {
   // :: ([MenuElement], ?Object)
@@ -201,7 +202,7 @@ function renderDropdownItems(items, view) {
   return rendered
 }
 
-// ;; Represents a submenu wrapping a group of elements that start
+// ::- Represents a submenu wrapping a group of elements that start
 // hidden and expand to the right when hovered over or tapped.
 class DropdownSubmenu {
   // :: ([MenuElement], ?Object)
