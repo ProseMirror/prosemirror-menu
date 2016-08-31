@@ -14,7 +14,7 @@ class MenuItem {
     this.spec = spec
   }
 
-  // :: (EditorView) → DOMNode
+  // :: (EditorView) → dom.Node
   // Renders the icon according to its [display
   // spec](#MenuItemSpec.display), and adds an event handler which
   // executes the command when the representation is clicked.
@@ -75,7 +75,7 @@ function translate(view, text) {
 //   example, the item for toggling the strong mark might be active then
 //   the cursor is in strong text).
 //
-//   render:: ?(EditorView) → DOMNode
+//   render:: ?(EditorView) → dom.Node
 //   A function that renders the item. You must provide either this,
 //   [`icon`](#MenuItemSpec.icon), or [`label`](#MenuItemSpec.label).
 //
@@ -144,7 +144,7 @@ class Dropdown {
     this.content = Array.isArray(content) ? content : [content]
   }
 
-  // :: (EditorView) → DOMNode
+  // :: (EditorView) → dom.Node
   // Returns a node showing the collapsed menu, which expands when clicked.
   render(view) {
     let items = renderDropdownItems(this.content, view)
@@ -216,7 +216,7 @@ class DropdownSubmenu {
     this.content = Array.isArray(content) ? content : [content]
   }
 
-  // :: (EditorView) → DOMNode
+  // :: (EditorView) → dom.Node
   // Renders the submenu.
   render(view) {
     let items = renderDropdownItems(this.content, view)
@@ -244,7 +244,7 @@ class DropdownSubmenu {
 }
 exports.DropdownSubmenu = DropdownSubmenu
 
-// :: (EditorView, [union<MenuElement, [MenuElement]>]) → ?DOMFragment
+// :: (EditorView, [union<MenuElement, [MenuElement]>]) → ?dom.DocumentFragment
 // Render the given, possibly nested, array of menu elements into a
 // document fragment, placing separators between them (and ensuring no
 // superfluous separators appear when some of the groups turn out to
