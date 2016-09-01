@@ -6,11 +6,11 @@ const {renderGrouped} = require("./menu")
 const prefix = "ProseMirror-menubar"
 
 class MenuBarEditorView {
-  constructor(place, state, props) {
+  constructor(place, props) {
     this.wrapper = crel("div", {class: prefix + "-wrapper"})
     if (place.appendChild) place.appendChild(this.wrapper)
     else if (place) place(this.wrapper)
-    this.editor = new EditorView(this.wrapper, state, props)
+    this.editor = new EditorView(this.wrapper, props)
 
     this.menu = crel("div", {class: prefix})
     this.menu.className = prefix
@@ -37,9 +37,14 @@ class MenuBarEditorView {
     }
   }
 
-  update(state, newProps) {
-    if (newProps) this.props = newProps
-    this.editor.update(state, newProps)
+  update(props) {
+    this.props = props
+    this.editor.update(props)
+    this.updateMenu()
+  }
+
+  updateState(state) {
+    this.editor.updateState(state)
     this.updateMenu()
   }
 
