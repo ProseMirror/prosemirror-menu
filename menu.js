@@ -1,5 +1,6 @@
 const crel = require("crel")
 const {lift, joinUp, selectParentNode, wrapIn, setBlockType} = require("../commands")
+const {undo, redo} = require("../history")
 
 const {getIcon} = require("./icons")
 
@@ -358,26 +359,22 @@ exports.selectParentNodeItem = selectParentNodeItem
 
 // :: (Object) → MenuItem
 // Menu item for the `undo` command.
-function undoItem(historyPlugin) {
-  return new MenuItem({
-    title: "Undo last change",
-    run: historyPlugin.undo,
-    select: state => historyPlugin.undo(state),
-    icon: icons.undo
-  })
-}
+let undoItem = new MenuItem({
+  title: "Undo last change",
+  run: undo,
+  select: state => undo(state),
+  icon: icons.undo
+})
 exports.undoItem = undoItem
 
 // :: (Object) → MenuItem
 // Menu item for the `redo` command.
-function redoItem(historyPlugin) {
-  return new MenuItem({
-    title: "Redo last undone change",
-    run: historyPlugin.redo,
-    select: state => historyPlugin.redo(state),
-    icon: icons.redo
-  })
-}
+let redoItem = new MenuItem({
+  title: "Redo last undone change",
+  run: redo,
+  select: state => redo(state),
+  icon: icons.redo
+})
 exports.redoItem = redoItem
 
 // :: (NodeType, Object) → MenuItem
