@@ -1,6 +1,6 @@
 const crel = require("crel")
-const {lift, joinUp, selectParentNode, wrapIn, setBlockType} = require("../commands")
-const {undo, redo} = require("../history")
+const {lift, joinUp, selectParentNode, wrapIn, setBlockType} = require("prosemirror-commands")
+const {undo, redo} = require("prosemirror-history")
 
 const {getIcon} = require("./icons")
 

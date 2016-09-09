@@ -1,5 +1,5 @@
 const crel = require("crel")
-const {EditorView} = require("../view")
+const {EditorView} = require("prosemirror-view")
 
 const {renderGrouped} = require("./menu")
 
