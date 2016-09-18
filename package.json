@@ -2,7 +2,7 @@
   "name": "prosemirror-menu",
   "version": "0.11.0",
   "description": "Simple menu elements for ProseMirror",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "license": "MIT",
   "maintainers": [
     {
@@ -22,9 +22,12 @@
     "prosemirror-history": "^0.11.0"
   },
   "devDependencies": {
+    "buble": "~0.14.0",
     "rimraf": "^2.5.4"
   },
   "scripts": {
-    "x-prepublish": "rimraf dist && babel -d dist src"
+    "build": "rimraf dist && buble -i src -o dist",
+    "link-src": "rimraf dist && ln -s src dist",
+    "prepublish": "npm run build"
   }
 }
