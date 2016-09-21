@@ -26,6 +26,9 @@ is the place to report issues.
 
 ## Documentation
 
+When using this module, you should make sure its `style/menu.css` file
+is loaded into your page.
+
 ### class MenuBarEditorView
 
 A wrapper around
