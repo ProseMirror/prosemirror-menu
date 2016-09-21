@@ -5,11 +5,28 @@ const {renderGrouped} = require("./menu")
 
 const prefix = "ProseMirror-menubar"
 
+// ::- A wrapper around
+// [`EditorView`](http://prosemirror.net/ref.html#view.EditorView)
+// that adds a menubar above the editor.
+//
+// Supports the following additional props:
+//
+// - **`floatingMenu`**`: ?bool` determines whether the menu floats,
+//   i.e. whether it sticks to the top of the viewport when the editor
+//   is partially scrolled out of view.
+//
+// - **`menuContent`**`: [[MenuElement]]` provides the content of the
+//   menu, as a nested array to be passed to `renderGrouped`.
 class MenuBarEditorView {
   constructor(place, props) {
+    // :: dom.Node The wrapping DOM element around the editor and the
+    // menu. Will get the CSS class `ProseMirror-menubar-wrapper`.
     this.wrapper = crel("div", {class: prefix + "-wrapper"})
     if (place.appendChild) place.appendChild(this.wrapper)
     else if (place) place(this.wrapper)
+    // :: EditorView The wrapped editor view. _Don't_ directly call
+    // `update` or `updateState` on this, always go through the
+    // wrapping view.
     this.editor = new EditorView(this.wrapper, props)
 
     this.menu = crel("div", {class: prefix})
@@ -22,6 +39,7 @@ class MenuBarEditorView {
     this.widthForMaxHeight = 0
     this.floating = false
 
+    // :: EditorProps The current props of this view.
     this.props = props
     this.updateMenu()
 
@@ -37,12 +55,14 @@ class MenuBarEditorView {
     }
   }
 
+  // :: (EditorProps) Update the view's props.
   update(props) {
     this.props = props
     this.editor.update(props)
     this.updateMenu()
   }
 
+  // :: (EditorState) Update only the state of the editor.
   updateState(state) {
     this.editor.updateState(state)
     this.updateMenu()
