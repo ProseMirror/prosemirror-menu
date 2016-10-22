@@ -22,7 +22,7 @@ class MenuBarEditorView {
     // :: dom.Node The wrapping DOM element around the editor and the
     // menu. Will get the CSS class `ProseMirror-menubar-wrapper`.
     this.wrapper = crel("div", {class: prefix + "-wrapper"})
-    if (place.appendChild) place.appendChild(this.wrapper)
+    if (place && place.appendChild) place.appendChild(this.wrapper)
     else if (place) place(this.wrapper)
     // :: EditorView The wrapped editor view. _Don't_ directly call
     // `update` or `updateState` on this, always go through the
