@@ -3,6 +3,7 @@
   "version": "0.13.0",
   "description": "Simple menu elements for ProseMirror",
   "main": "dist/index.js",
+  "style": "style/menu.css",
   "license": "MIT",
   "maintainers": [
     {
