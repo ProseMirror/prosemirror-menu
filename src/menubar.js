@@ -128,6 +128,12 @@ class MenuBarEditorView {
       }
     }
   }
+
+  // :: ()
+  // Destroy the editor instance.
+  destroy() {
+    this.editor.destroy()
+  }
 }
 exports.MenuBarEditorView = MenuBarEditorView
 
