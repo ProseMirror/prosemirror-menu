@@ -45,7 +45,7 @@ class MenuItem {
     if (spec.css) dom.style.cssText += spec.css
     if (!disabled) dom.addEventListener(spec.execEvent || "mousedown", e => {
       e.preventDefault()
-      spec.run(view.state, view.props.onAction, view)
+      spec.run(view.state, view.dispatch, view)
     })
     return dom
   }
@@ -59,7 +59,7 @@ function translate(view, text) {
 // MenuItemSpec:: interface
 // The configuration object passed to the `MenuItem` constructor.
 //
-//   run:: (EditorState, (Action), EditorView)
+//   run:: (EditorState, (Transaction), EditorView)
 //   The function to execute when the menu item is activated.
 //
 //   select:: ?(EditorState) → bool
@@ -384,9 +384,9 @@ exports.redoItem = redoItem
 // `toggleMarkItem`.
 function wrapItem(nodeType, options) {
   let passedOptions = {
-    run(state, onAction) {
+    run(state, dispatch) {
       // FIXME if (options.attrs instanceof Function) options.attrs(state, attrs => wrapIn(nodeType, attrs)(state))
-      return wrapIn(nodeType, options.attrs)(state, onAction)
+      return wrapIn(nodeType, options.attrs)(state, dispatch)
     },
     select(state) {
       return wrapIn(nodeType, options.attrs instanceof Function ? null : options.attrs)(state)

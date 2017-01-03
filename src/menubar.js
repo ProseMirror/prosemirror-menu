@@ -24,6 +24,8 @@ class MenuBarEditorView {
     this.wrapper = crel("div", {class: prefix + "-wrapper"})
     if (place && place.appendChild) place.appendChild(this.wrapper)
     else if (place) place(this.wrapper)
+    if (!props.dispatchTransaction)
+      props.dispatchTransaction = tr => this.updateState(this.editor.state.apply(tr))
     // :: EditorView The wrapped editor view. _Don't_ directly call
     // `update` or `updateState` on this, always go through the
     // wrapping view.
