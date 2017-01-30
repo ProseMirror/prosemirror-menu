@@ -48,7 +48,8 @@ class MenuBarEditorView {
     if (this.editor.someProp("floatingMenu")) {
       this.updateFloat()
       this.scrollFunc = () => {
-        if (!this.editor.root.contains(this.wrapper))
+        let root = this.editor.root
+        if (!(root.body || root).contains(this.wrapper))
           window.removeEventListener("scroll", this.scrollFunc)
         else
           this.updateFloat()
