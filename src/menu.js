@@ -40,7 +40,7 @@ class MenuItem {
     }
 
     if (spec.title) dom.setAttribute("title", translate(view, spec.title))
-    if (spec.class) dom.classList.add(spec.class)
+    if (spec.class) dom.className += ' '+spec.class
     if (disabled) dom.classList.add(prefix + "-disabled")
     if (spec.css) dom.style.cssText += spec.css
     if (!disabled) dom.addEventListener(spec.execEvent || "mousedown", e => {
@@ -258,7 +258,9 @@ function renderGrouped(view, content) {
       let rendered = items[j].render(view)
       if (rendered) {
         if (!added && needSep) result.appendChild(separator())
-        result.appendChild(crel("span", {class: prefix + "item"}, rendered))
+        result.appendChild(crel("span", {
+          class: prefix + "item"+ (items[j].spec && items[j].spec.menuItemClass ? ' '+items[j].spec.menuItemClass : '')
+        }, rendered))
         added = true
       }
     }
