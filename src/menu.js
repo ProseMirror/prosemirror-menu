@@ -53,7 +53,7 @@ class MenuItem {
 exports.MenuItem = MenuItem
 
 function translate(view, text) {
-  return view.props.translate ? view.props.translate(text) : text
+  return view._props.translate ? view._props.translate(text) : text
 }
 
 // MenuItemSpec:: interface
