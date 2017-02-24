@@ -21,9 +21,11 @@ class MenuBarEditorView {
   constructor(place, props) {
     // :: dom.Node The wrapping DOM element around the editor and the
     // menu. Will get the CSS class `ProseMirror-menubar-wrapper`.
-    this.wrapper = crel("div", {class: prefix + "-wrapper"})
-    if (place && place.appendChild) place.appendChild(this.wrapper)
-    else if (place) place(this.wrapper)
+    this.wrapper = crel(place && place.mount || "div", {class: prefix + "-wrapper"})
+    if (place) {
+      if (place.appendChild) place.appendChild(this.wrapper)
+      else if (place.apply) place(this.wrapper)
+    }
     if (!props.dispatchTransaction)
       props.dispatchTransaction = tr => this.updateState(this.editor.state.apply(tr))
     // :: EditorView The wrapped editor view. _Don't_ directly call
