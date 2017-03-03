@@ -31,10 +31,12 @@
 .ProseMirror-menu-dropdown {
   vertical-align: 1px;
   cursor: pointer;
+  position: relative;
+  padding-right: 15px;
 }
 
 .ProseMirror-menu-dropdown-wrap {
-  padding: 1px 14px 1px 4px;
+  padding: 1px 0 1px 4px;
   display: inline-block;
   position: relative;
 }
@@ -46,7 +48,7 @@
   border-top: 4px solid currentColor;
   opacity: .6;
   position: absolute;
-  right: 2px;
+  right: 4px;
   top: calc(50% - 2px);
 }
 
