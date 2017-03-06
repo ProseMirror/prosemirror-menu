@@ -1,56 +1,55 @@
 const crel = require("crel")
-const {EditorView} = require("prosemirror-view")
+const {Plugin} = require("prosemirror-state")
 
 const {renderGrouped} = require("./menu")
 
 const prefix = "ProseMirror-menubar"
 
-// ::- A wrapper around
-// [`EditorView`](http://prosemirror.net/ref.html#view.EditorView)
-// that adds a menubar above the editor.
+// :: (Object)
+// A plugin that will place a menu bar above the editor. Note that
+// this involves wrapping the editor in an additional `<div>`.
 //
-// Supports the following additional props:
+//   options::-
+//   Supports the following options:
 //
-// - **`floatingMenu`**`: ?bool` determines whether the menu floats,
-//   i.e. whether it sticks to the top of the viewport when the editor
-//   is partially scrolled out of view.
+//     content:: [[MenuElement]]
+//     Provides the content of the menu, as a nested array to be
+//     passed to `renderGrouped`.
 //
-// - **`menuContent`**`: [[MenuElement]]` provides the content of the
-//   menu, as a nested array to be passed to `renderGrouped`.
-class MenuBarEditorView {
-  constructor(place, props) {
-    // :: dom.Node The wrapping DOM element around the editor and the
-    // menu. Will get the CSS class `ProseMirror-menubar-wrapper`.
-    this.wrapper = crel(place && place.mount || "div", {class: prefix + "-wrapper"})
-    if (place) {
-      if (place.appendChild) place.appendChild(this.wrapper)
-      else if (place.apply) place(this.wrapper)
-    }
-    if (!props.dispatchTransaction)
-      props.dispatchTransaction = tr => this.updateState(this.editor.state.apply(tr))
-    // :: EditorView The wrapped editor view. _Don't_ directly call
-    // `update` or `updateState` on this, always go through the
-    // wrapping view.
-    this.editor = new EditorView(this.wrapper, props)
+//     floating:: ?bool
+//     Determines whether the menu floats, i.e. whether it sticks to
+//     the top of the viewport when the editor is partially scrolled
+//     out of view.
+function menuBar(options) {
+  return new Plugin({
+    view(editorView) { return new MenuBarView(editorView, options) }
+  })
+}
+exports.menuBar = menuBar
 
-    this.menu = crel("div", {class: prefix})
+class MenuBarView {
+  constructor(editorView, options) {
+    this.editorView = editorView
+    this.options = options
+
+    this.wrapper = crel("div", {class: prefix + "-wrapper"})
+    this.menu = this.wrapper.appendChild(crel("div", {class: prefix}))
     this.menu.className = prefix
     this.spacer = null
 
-    this.wrapper.insertBefore(this.menu, this.wrapper.firstChild)
+    editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom)
+    this.wrapper.appendChild(editorView.dom)
 
     this.maxHeight = 0
     this.widthForMaxHeight = 0
     this.floating = false
 
-    // :: EditorProps The current props of this view.
-    this.props = props
-    this.updateMenu()
+    this.update()
 
-    if (this.editor.someProp("floatingMenu")) {
+    if (options.floating) {
       this.updateFloat()
       this.scrollFunc = () => {
-        let root = this.editor.root
+        let root = this.editorView.root
         if (!(root.body || root).contains(this.wrapper))
           window.removeEventListener("scroll", this.scrollFunc)
         else
@@ -60,22 +59,9 @@ class MenuBarEditorView {
     }
   }
 
-  // :: (EditorProps) Update the view's props.
-  update(props) {
-    this.props = props
-    this.editor.update(props)
-    this.updateMenu()
-  }
-
-  // :: (EditorState) Update only the state of the editor.
-  updateState(state) {
-    this.editor.updateState(state)
-    this.updateMenu()
-  }
-
-  updateMenu() {
+  update() {
     this.menu.textContent = ""
-    this.menu.appendChild(renderGrouped(this.editor, this.editor.someProp("menuContent")))
+    this.menu.appendChild(renderGrouped(this.editorView, this.options.content))
 
     if (this.floating) {
       this.updateScrollCursor()
@@ -91,9 +77,8 @@ class MenuBarEditorView {
     }
   }
 
-
   updateScrollCursor() {
-    let selection = this.editor.root.getSelection()
+    let selection = this.editorView.root.getSelection()
     if (!selection.focusNode) return
     let rects = selection.getRangeAt(0).getClientRects()
     let selRect = rects[selectionIsInverted(selection) ? 0 : rects.length - 1]
@@ -132,13 +117,11 @@ class MenuBarEditorView {
     }
   }
 
-  // :: ()
-  // Destroy the editor instance.
   destroy() {
-    this.editor.destroy()
+    if (this.wrapper.parentNode)
+      this.wrapper.parentNode.replaceChild(this.editorView.dom, this.wrapper)
   }
 }
-exports.MenuBarEditorView = MenuBarEditorView
 
 // Not precise, but close enough
 function selectionIsInverted(selection) {

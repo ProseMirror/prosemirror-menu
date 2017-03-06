@@ -29,41 +29,24 @@ is the place to report issues.
 When using this module, you should make sure its `style/menu.css` file
 is loaded into your page.
 
-### class MenuBarEditorView
+### menuBar
 
-A wrapper around
-[`EditorView`](http://prosemirror.net/ref.html#view.EditorView) that
-adds a menubar above the editor.
+`menuBar(options) → Plugin`
 
-Supports the following additional props:
+A function that returns a plugin that causes an
+[`EditorView`](http://prosemirror.net/ref.html#view.EditorView) to
+show a menubar above the content.
 
- - **`floatingMenu`**`: ?bool`\
+Supports the following options:
+
+ - **`floating`**`: ?bool`\
    Determines whether the menu floats, i.e. whether it sticks to the
    top of the viewport when the editor is partially scrolled out of
    view.
 
- - **`menuContent`**`: \[\[MenuElement]]`\
+ - **`content`**`: \[\[MenuElement]]`\
    Provides the content of the menu, as a nested array to be passed to
    `renderGrouped`.
-
-And has these properties and methods:
-
- - **`wrapper`**`: dom.Node`\
-   The wrapping DOM element around the editor and the menu. Will get
-   the CSS class `ProseMirror-menubar-wrapper`.
-
- - **`editor`**`: EditorView`\
-   The wrapped editor view. _Don't_ directly call `update` or
-   `updateState` on this, always go through the wrapping view.
-
- - **`props`**`: EditorProps`\
-   The current props of this view.
-
- - **`update`**`(props: EditorProps)`\
-   Update the view's props.
-
- - **`updateState`**`(state: EditorState)`\
-   Update only the state of the editor.
 
 ### interface MenuElement
 

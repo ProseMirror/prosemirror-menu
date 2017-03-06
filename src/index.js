@@ -3,10 +3,10 @@
    liftItem: exports.liftItem, selectParentNodeItem: exports.selectParentNodeItem,
    undoItem: exports.undoItem, redoItem: exports.redoItem, wrapItem: exports.wrapItem,
    blockTypeItem: exports.blockTypeItem} = require("./menu"))
-exports.MenuBarEditorView = require("./menubar").MenuBarEditorView
+exports.menuBar = require("./menubar").menuBar
 
 // !! This module defines a number of building blocks for ProseMirror
-// menus, along with a [menu bar](#menu.MenuBarEditorView) implementation.
+// menus, along with a [menu bar](#menu.menuBar) implementation.
 
 // MenuElement:: interface
 // The types defined in this module aren't the only thing you can

@@ -3,6 +3,7 @@
 @MenuItemSpec
 @Dropdown
 @DropdownSubmenu
+@menuBar
 
 This module exports the following pre-built items or item
 constructors:
