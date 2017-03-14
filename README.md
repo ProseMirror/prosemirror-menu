@@ -84,7 +84,7 @@ The configuration object passed to the `MenuItem` constructor.
   Optional function that is used to determine whether the item is
   appropriate at the moment.
 
-* `onDeselect: ?string`\
+* `onDeselected: ?string`\
   Determines what happens when `select`
   returns false. The default is to hide the item, you can set this to
   `"disable"` to instead render the item with a disabled style.
