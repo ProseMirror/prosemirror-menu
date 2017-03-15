@@ -45,7 +45,7 @@ class MenuItem {
     if (spec.css) dom.style.cssText += spec.css
     if (!disabled) dom.addEventListener(spec.execEvent || "mousedown", e => {
       e.preventDefault()
-      spec.run(view.state, view.dispatch, view)
+      spec.run(view.state, view.dispatch, view, e)
     })
     return dom
   }
@@ -59,7 +59,7 @@ function translate(view, text) {
 // MenuItemSpec:: interface
 // The configuration object passed to the `MenuItem` constructor.
 //
-//   run:: (EditorState, (Transaction), EditorView)
+//   run:: (EditorState, (Transaction), EditorView, event)
 //   The function to execute when the menu item is activated.
 //
 //   select:: ?(EditorState) → bool
