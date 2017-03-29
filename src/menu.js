@@ -59,7 +59,7 @@ function translate(view, text) {
 // MenuItemSpec:: interface
 // The configuration object passed to the `MenuItem` constructor.
 //
-//   run:: (EditorState, (Transaction), EditorView, event)
+//   run:: (EditorState, (Transaction), EditorView, dom.Event)
 //   The function to execute when the menu item is activated.
 //
 //   select:: ?(EditorState) → bool

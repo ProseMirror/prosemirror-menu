@@ -77,7 +77,7 @@ An icon or label that, when clicked, executes a command.
 
 The configuration object passed to the `MenuItem` constructor.
 
-* `run(EditorState, fn(Action), EditorView)`\
+* `run(EditorState, fn(Action), EditorView, dom.Event)`\
   The function to execute when the menu item is activated.
 
 * `select(EditorState) → bool`\
