@@ -139,6 +139,10 @@
   cursor: pointer;
 }
 
+.ProseMirror-menu-disabled.ProseMirror-icon {
+  cursor: default;
+}
+
 .ProseMirror-icon svg {
   fill: currentColor;
   height: 1em;
