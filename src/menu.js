@@ -39,7 +39,10 @@ class MenuItem {
       throw new RangeError("MenuItem without render, icon, or label property")
     }
 
-    if (spec.title) dom.setAttribute("title", translate(view, spec.title))
+    if (spec.title) {
+      const title=(typeof spec.title === "function" ? spec.title(view.state) : spec.title)
+      dom.setAttribute("title", translate(view, title))
+    }
     if (spec.class) dom.classList.add(spec.class)
     if (disabled) dom.classList.add(prefix + "-disabled")
     if (spec.css) dom.style.cssText += spec.css
