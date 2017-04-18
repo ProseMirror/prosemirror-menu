@@ -113,7 +113,7 @@ The configuration object passed to the `MenuItem` constructor.
   wrapped in a drop-down or similar menu. The object
   should have a `label` property providing the text to display.
 
-* `title: ?string`\
+* `title: ?string | fn(state) → string)`\
   Defines DOM title (mouseover) text for the item.
 
 * `class: string`\
