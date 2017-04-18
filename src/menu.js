@@ -40,7 +40,7 @@ class MenuItem {
     }
 
     if (spec.title) {
-      const title=(typeof spec.title === "function" ? spec.title(view.state) : spec.title)
+      const title = (typeof spec.title === "function" ? spec.title(view.state) : spec.title)
       dom.setAttribute("title", translate(view, title))
     }
     if (spec.class) dom.classList.add(spec.class)
