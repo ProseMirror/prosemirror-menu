@@ -13,7 +13,7 @@ exports.menuBar = require("./menubar").menuBar
 // display in your menu. Anything that conforms to this interface can
 // be put into a menu structure.
 //
-//   render:: (pm: ProseMirror) → ?dom.Node
+//   render:: (pm: EditorView) → ?dom.Node
 //   Render the element for display in the menu. Returning `null` can be
 //   used to signal that this element shouldn't be displayed for the
 //   given editor state.
