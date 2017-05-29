@@ -11,7 +11,7 @@ function isIOS() {
   return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) && /Mobile\/\w+/.test(agent)
 }
 
-// :: (Object)
+// :: (Object) → Plugin
 // A plugin that will place a menu bar above the editor. Note that
 // this involves wrapping the editor in an additional `<div>`.
 //
