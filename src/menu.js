@@ -155,9 +155,9 @@ class Dropdown {
     if (!items.length) return null
 
     let label = crel("div", {class: prefix + "-dropdown " + (this.options.class || ""),
-                             style: this.options.css,
-                             title: this.options.title && translate(view, this.options.title)},
-                    translate(view, this.options.label))
+                             style: this.options.css},
+                     translate(view, this.options.label))
+    if (this.options.title) label.setAttribute("title", translate(view, this.options.title))
     let wrap = crel("div", {class: prefix + "-dropdown-wrap"}, label)
     let open = null, listeningOnClose = null
     let close = () => {
