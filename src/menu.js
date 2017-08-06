@@ -1,13 +1,13 @@
-const crel = require("crel")
-const {lift, joinUp, selectParentNode, wrapIn, setBlockType} = require("prosemirror-commands")
-const {undo, redo} = require("prosemirror-history")
+import crel from "crel"
+import {lift, joinUp, selectParentNode, wrapIn, setBlockType} from "prosemirror-commands"
+import {undo, redo} from "prosemirror-history"
 
-const {getIcon} = require("./icons")
+import {getIcon} from "./icons"
 
 const prefix = "ProseMirror-menu"
 
 // ::- An icon or label that, when clicked, executes a command.
-class MenuItem {
+export class MenuItem {
   // :: (MenuItemSpec)
   constructor(spec) {
     // :: MenuItemSpec
@@ -53,7 +53,6 @@ class MenuItem {
     return dom
   }
 }
-exports.MenuItem = MenuItem
 
 function translate(view, text) {
   return view._props.translate ? view._props.translate(text) : text
@@ -125,7 +124,7 @@ function isMenuEvent(wrapper) {
 
 // ::- A drop-down menu, displayed as a label with a downwards-pointing
 // triangle to the right of it.
-class Dropdown {
+export class Dropdown {
   // :: ([MenuElement], ?Object)
   // Create a dropdown wrapping the elements. Options may include
   // the following properties:
@@ -195,7 +194,6 @@ class Dropdown {
     return {close, node: menuDOM}
   }
 }
-exports.Dropdown = Dropdown
 
 function renderDropdownItems(items, view) {
   let rendered = []
@@ -208,7 +206,7 @@ function renderDropdownItems(items, view) {
 
 // ::- Represents a submenu wrapping a group of elements that start
 // hidden and expand to the right when hovered over or tapped.
-class DropdownSubmenu {
+export class DropdownSubmenu {
   // :: ([MenuElement], ?Object)
   // Creates a submenu for the given group of menu elements. The
   // following options are recognized:
@@ -246,14 +244,13 @@ class DropdownSubmenu {
     return wrap
   }
 }
-exports.DropdownSubmenu = DropdownSubmenu
 
 // :: (EditorView, [union<MenuElement, [MenuElement]>]) → ?dom.DocumentFragment
 // Render the given, possibly nested, array of menu elements into a
 // document fragment, placing separators between them (and ensuring no
 // superfluous separators appear when some of the groups turn out to
 // be empty).
-function renderGrouped(view, content) {
+export function renderGrouped(view, content) {
   let result = document.createDocumentFragment(), needSep = false
   for (let i = 0; i < content.length; i++) {
     let items = content[i], added = false
@@ -269,7 +266,6 @@ function renderGrouped(view, content) {
   }
   return result
 }
-exports.renderGrouped = renderGrouped
 
 function separator() {
   return crel("span", {class: prefix + "separator"})
@@ -281,7 +277,7 @@ function separator() {
 // `code`, `link`, `bulletList`, `orderedList`, and `blockquote`, each
 // holding an object that can be used as the `icon` option to
 // `MenuItem`.
-const icons = {
+export const icons = {
   join: {
     width: 800, height: 900,
     path: "M0 75h800v125h-800z M0 825h800v-125h-800z M250 400h100v-100h100v100h100v100h-100v100h-100v-100h-100z"
@@ -328,64 +324,58 @@ const icons = {
     path: "M0 448v256h256v-256h-128c0 0 0-128 128-128v-128c0 0-256 0-256 256zM640 320v-128c0 0-256 0-256 256v256h256v-256h-128c0 0 0-128 128-128z"
   }
 }
-exports.icons = icons
 
 // :: MenuItem
 // Menu item for the `joinUp` command.
-const joinUpItem = new MenuItem({
+export const joinUpItem = new MenuItem({
   title: "Join with above block",
   run: joinUp,
   select: state => joinUp(state),
   icon: icons.join
 })
-exports.joinUpItem = joinUpItem
 
 // :: MenuItem
 // Menu item for the `lift` command.
-const liftItem = new MenuItem({
+export const liftItem = new MenuItem({
   title: "Lift out of enclosing block",
   run: lift,
   select: state => lift(state),
   icon: icons.lift
 })
-exports.liftItem = liftItem
 
 // :: MenuItem
 // Menu item for the `selectParentNode` command.
-const selectParentNodeItem = new MenuItem({
+export const selectParentNodeItem = new MenuItem({
   title: "Select parent node",
   run: selectParentNode,
   select: state => selectParentNode(state),
   icon: icons.selectParentNode
 })
-exports.selectParentNodeItem = selectParentNodeItem
 
 // :: (Object) → MenuItem
 // Menu item for the `undo` command.
-let undoItem = new MenuItem({
+export let undoItem = new MenuItem({
   title: "Undo last change",
   run: undo,
   select: state => undo(state),
   icon: icons.undo
 })
-exports.undoItem = undoItem
 
 // :: (Object) → MenuItem
 // Menu item for the `redo` command.
-let redoItem = new MenuItem({
+export let redoItem = new MenuItem({
   title: "Redo last undone change",
   run: redo,
   select: state => redo(state),
   icon: icons.redo
 })
-exports.redoItem = redoItem
 
 // :: (NodeType, Object) → MenuItem
 // Build a menu item for wrapping the selection in a given node type.
 // Adds `run` and `select` properties to the ones present in
 // `options`. `options.attrs` may be an object or a function, as in
 // `toggleMarkItem`.
-function wrapItem(nodeType, options) {
+export function wrapItem(nodeType, options) {
   let passedOptions = {
     run(state, dispatch) {
       // FIXME if (options.attrs instanceof Function) options.attrs(state, attrs => wrapIn(nodeType, attrs)(state))
@@ -398,14 +388,13 @@ function wrapItem(nodeType, options) {
   for (let prop in options) passedOptions[prop] = options[prop]
   return new MenuItem(passedOptions)
 }
-exports.wrapItem = wrapItem
 
 // :: (NodeType, Object) → MenuItem
 // Build a menu item for changing the type of the textblock around the
 // selection to the given type. Provides `run`, `active`, and `select`
 // properties. Others must be given in `options`. `options.attrs` may
 // be an object to provide the attributes for the textblock node.
-function blockTypeItem(nodeType, options) {
+export function blockTypeItem(nodeType, options) {
   let command = setBlockType(nodeType, options.attrs)
   let passedOptions = {
     run: command,
@@ -419,4 +408,3 @@ function blockTypeItem(nodeType, options) {
   for (let prop in options) passedOptions[prop] = options[prop]
   return new MenuItem(passedOptions)
 }
-exports.blockTypeItem = blockTypeItem

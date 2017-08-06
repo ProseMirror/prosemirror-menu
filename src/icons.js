@@ -10,7 +10,7 @@ function hashPath(path) {
   return hash
 }
 
-function getIcon(icon) {
+export function getIcon(icon) {
   let node = document.createElement("div")
   node.className = prefix
   if (icon.path) {
@@ -28,7 +28,6 @@ function getIcon(icon) {
   }
   return node
 }
-exports.getIcon = getIcon
 
 function buildSVG(name, data) {
   let collection = document.getElementById(prefix + "-collection")

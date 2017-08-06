@@ -1,7 +1,7 @@
-const crel = require("crel")
-const {Plugin} = require("prosemirror-state")
+import crel from "crel"
+import {Plugin} from "prosemirror-state"
 
-const {renderGrouped} = require("./menu")
+import {renderGrouped} from "./menu"
 
 const prefix = "ProseMirror-menubar"
 
@@ -26,12 +26,11 @@ function isIOS() {
 //     Determines whether the menu floats, i.e. whether it sticks to
 //     the top of the viewport when the editor is partially scrolled
 //     out of view.
-function menuBar(options) {
+export function menuBar(options) {
   return new Plugin({
     view(editorView) { return new MenuBarView(editorView, options) }
   })
 }
-exports.menuBar = menuBar
 
 class MenuBarView {
   constructor(editorView, options) {
