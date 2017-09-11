@@ -54,10 +54,11 @@ The types defined in this module aren't the only thing you can display
 in your menu. Anything that conforms to this interface can be put into a
 menu structure.
 
-* `render(pm: ProseMirror) → ?dom.Node`\
-  Render the element for display in the menu. Returning `null` can be
-  used to signal that this element shouldn't be displayed for the given
-  editor state.
+* `render(pm: EditorView) → {dom: dom.Node, update: (EditorState) → bool}`\
+  Render the element for display in the menu. Must return a DOM
+  element and a function that can be used to update the element to
+  a new state. The `update` function will return false if the
+  update hid the entire element.
 
 ### class MenuItem
 
@@ -82,12 +83,12 @@ The configuration object passed to the `MenuItem` constructor.
 
 * `select(EditorState) → bool`\
   Optional function that is used to determine whether the item is
-  appropriate at the moment.
+  appropriate at the moment. Deselected items will be hidden.
 
-* `onDeselected: ?string`\
-  Determines what happens when `select`
-  returns false. The default is to hide the item, you can set this to
-  `"disable"` to instead render the item with a disabled style.
+* `enable:: ?(EditorState) → bool`\
+  Function that is used to determine if the item is enabled. If
+  given and returning false, the item will be given a disabled
+  styling.
 
 * `active(EditorState) → bool`\
   A predicate function to determine whether the item is 'active' (for

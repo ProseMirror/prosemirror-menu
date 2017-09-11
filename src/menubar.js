@@ -49,6 +49,9 @@ class MenuBarView {
     this.widthForMaxHeight = 0
     this.floating = false
 
+    let {dom, update} = renderGrouped(this.editorView, this.options.content)
+    this.contentUpdate = update
+    this.menu.appendChild(dom)
     this.update()
 
     if (options.floating && !isIOS()) {
@@ -65,8 +68,7 @@ class MenuBarView {
   }
 
   update() {
-    this.menu.textContent = ""
-    this.menu.appendChild(renderGrouped(this.editorView, this.options.content))
+    this.contentUpdate(this.editorView.state)
 
     if (this.floating) {
       this.updateScrollCursor()
