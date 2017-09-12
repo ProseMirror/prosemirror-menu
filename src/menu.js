@@ -213,13 +213,17 @@ function renderDropdownItems(items, view) {
     rendered.push(crel("div", {class: prefix + "-dropdown-item"}, dom))
     updates.push(update)
   }
-  return {dom: rendered, update: combineUpdates(updates)}
+  return {dom: rendered, update: combineUpdates(updates, rendered)}
 }
 
-function combineUpdates(updates) {
+function combineUpdates(updates, nodes) {
   return state => {
     let something = false
-    for (let i = 0; i < updates.length; i++) if (updates[i](state)) something = true
+    for (let i = 0; i < updates.length; i++) {
+      let up = updates[i](state)
+      nodes[i].style.display = up ? "" : "none"
+      if (up) something = true
+    }
     return something
   }
 }
@@ -279,10 +283,12 @@ export function renderGrouped(view, content) {
   let result = document.createDocumentFragment()
   let updates = [], separators = []
   for (let i = 0; i < content.length; i++) {
-    let items = content[i], localUpdates = []
+    let items = content[i], localUpdates = [], localNodes = []
     for (let j = 0; j < items.length; j++) {
       let {dom, update} = items[j].render(view)
-      result.appendChild(crel("span", {class: prefix + "item"}, dom))
+      let span = crel("span", {class: prefix + "item"}, dom)
+      result.appendChild(span)
+      localNodes.push(span)
       localUpdates.push(update)
     }
     if (localUpdates.length) {
