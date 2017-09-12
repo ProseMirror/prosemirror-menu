@@ -286,8 +286,9 @@ export function renderGrouped(view, content) {
       localUpdates.push(update)
     }
     if (localUpdates.length) {
-      updates.push(combineUpdates(localUpdates))
-      separators.push(result.appendChild(separator()))
+      updates.push(combineUpdates(localUpdates, localNodes))
+      if (i < content.length - 1)
+        separators.push(result.appendChild(separator()))
     }
   }
 
@@ -295,7 +296,7 @@ export function renderGrouped(view, content) {
     let something = false, needSep = false
     for (let i = 0; i < updates.length; i++) {
       let hasContent = updates[i](state)
-      separators[i].style.display = needSep && hasContent ? "" : "none"
+      if (i) separators[i - 1].style.display = needSep && hasContent ? "" : "none"
       needSep = hasContent
       if (hasContent) something = true
     }
