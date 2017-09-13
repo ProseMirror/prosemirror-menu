@@ -34,7 +34,7 @@ is loaded into your page.
 `menuBar(options) → Plugin`
 
 A function that returns a plugin that causes an
-[`EditorView`](http://prosemirror.net/ref.html#view.EditorView) to
+[`EditorView`](http://prosemirror.net/docs/ref/#view.EditorView) to
 show a menubar above the content.
 
 Supports the following options:
