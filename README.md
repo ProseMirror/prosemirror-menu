@@ -217,3 +217,8 @@ Render the given, possibly nested, array of menu elements into a
 document fragment, placing separators between them (and ensuring no
 superfluous separators appear when some of the groups turn out to be
 empty).
+
+We aim to be an inclusive, welcoming community. To make that explicit,
+we have a [code of
+conduct](http://contributor-covenant.org/version/1/1/0/) that applies
+to communication around the project.
