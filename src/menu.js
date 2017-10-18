@@ -46,11 +46,11 @@ export class MenuItem {
       let enabled = true
       if (spec.enable) {
         enabled = spec.enable(state) || false
-        dom.classList.toggle(prefix + "-disabled", !enabled)
+        setClass(dom, prefix + "-disabled", !enabled)
       }
       if (spec.active) {
         let active = enabled && spec.active(state) || false
-        dom.classList.toggle(prefix + "-active", active)
+        setClass(dom, prefix + "-active", active)
       }
       return true
     }
@@ -254,7 +254,7 @@ export class DropdownSubmenu {
     label.addEventListener("mousedown", e => {
       e.preventDefault()
       markMenuEvent(e)
-      wrap.classList.toggle(prefix + "-submenu-wrap-active")
+      setClass(wrap, prefix + "-submenu-wrap-active")
       if (!listeningOnClose)
         window.addEventListener("mousedown", listeningOnClose = () => {
           if (!isMenuEvent(wrap)) {
@@ -451,4 +451,10 @@ export function blockTypeItem(nodeType, options) {
   }
   for (let prop in options) passedOptions[prop] = options[prop]
   return new MenuItem(passedOptions)
+}
+
+// Work around classList.toggle being broken in IE11
+function setClass(dom, cls, on) {
+  if (on) dom.classList.add(cls)
+  else dom.classList.remove(cls)
 }
