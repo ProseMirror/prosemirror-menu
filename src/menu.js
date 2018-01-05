@@ -396,7 +396,7 @@ export const selectParentNodeItem = new MenuItem({
   icon: icons.selectParentNode
 })
 
-// :: (Object) → MenuItem
+// :: MenuItem
 // Menu item for the `undo` command.
 export let undoItem = new MenuItem({
   title: "Undo last change",
@@ -405,7 +405,7 @@ export let undoItem = new MenuItem({
   icon: icons.undo
 })
 
-// :: (Object) → MenuItem
+// :: MenuItem
 // Menu item for the `redo` command.
 export let redoItem = new MenuItem({
   title: "Redo last undone change",

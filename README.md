@@ -181,11 +181,11 @@ Menu item for the `lift` command.
 
 Menu item for the `selectParentNode` command.
 
-`undoItem(Object) → MenuItem`
+`undoItem: MenuItem`
 
 Menu item for the `undo` command.
 
-`redoItem(Object) → MenuItem`
+`redoItem: MenuItem`
 
 Menu item for the `redo` command.
 
