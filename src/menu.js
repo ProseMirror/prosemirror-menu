@@ -21,7 +21,8 @@ export class MenuItem {
   // executes the command when the representation is clicked.
   render(view) {
     let spec = this.spec
-    let dom = spec. icon ? getIcon(spec.icon)
+    let dom = spec.render ? spec.render(view)
+        : spec.icon ? getIcon(spec.icon)
         : spec.label ? crel("div", null, translate(view, spec.label))
         : null
     if (!dom) throw new RangeError("MenuItem without icon or label property")
