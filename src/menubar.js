@@ -103,7 +103,7 @@ class MenuBarView {
 
   updateFloat(scrollAncestor) {
     let parent = this.wrapper, editorRect = parent.getBoundingClientRect(),
-        top= scrollAncestor ? scrollAncestor.getBoundingClientRect().top : 0;
+        top= scrollAncestor ? Math.max(0, scrollAncestor.getBoundingClientRect().top) : 0;
 
     if (this.floating) {
       if (editorRect.top >= top || editorRect.bottom < this.menu.offsetHeight + 10) {
