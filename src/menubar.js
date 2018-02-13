@@ -59,11 +59,12 @@ class MenuBarView {
       let scrollAncestor = findWrappingScollContainer(this.wrapper);
       this.scrollFunc = () => {
         let root = this.editorView.root
-        if (!(root.body || root).contains(this.wrapper))
-          window.removeEventListener("scroll", this.scrollFunc)
-          if (scrollAncestor) scrollAncestor.removeEventListener("scroll", this.scrollfunc)
-        else
-          this.updateFloat(scrollAncestor)
+        if (!(root.body || root).contains(this.wrapper)) {
+            window.removeEventListener("scroll", this.scrollFunc)
+            if (scrollAncestor) scrollAncestor.removeEventListener("scroll", this.scrollfunc)
+        } else {
+            this.updateFloat(scrollAncestor)
+        }
       }
       window.addEventListener("scroll", this.scrollFunc)
       if (scrollAncestor) scrollAncestor.addEventListener("scroll", this.scrollFunc)
