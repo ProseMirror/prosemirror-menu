@@ -61,7 +61,7 @@ class MenuBarView {
         let root = this.editorView.root
         if (!(root.body || root).contains(this.wrapper))
           window.removeEventListener("scroll", this.scrollFunc)
-          if (scrollAncestor) scrollAncestor.removeListener("scroll", this.scrollfunc)
+          if (scrollAncestor) scrollAncestor.removeEventListener("scroll", this.scrollfunc)
         else
           this.updateFloat(scrollAncestor)
       }
