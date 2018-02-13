@@ -66,7 +66,7 @@ class MenuBarView {
           this.updateFloat(scrollAncestor)
       }
       window.addEventListener("scroll", this.scrollFunc)
-      if (scrollAncestor) scrollAncestor.addListener("scroll", this.scrollFunc)
+      if (scrollAncestor) scrollAncestor.addEventListener("scroll", this.scrollFunc)
     }
   }
 
