@@ -56,18 +56,16 @@ class MenuBarView {
 
     if (options.floating && !isIOS()) {
       this.updateFloat()
-      let scrollAncestor = findWrappingScollContainer(this.wrapper);
-      this.scrollFunc = () => {
+      let potentialScrollers = findEverythingThatCouldScroll(this.wrapper);
+      this.scrollFunc = (e) => {
         let root = this.editorView.root
         if (!(root.body || root).contains(this.wrapper)) {
-            window.removeEventListener("scroll", this.scrollFunc)
-            if (scrollAncestor) scrollAncestor.removeEventListener("scroll", this.scrollfunc)
+            potentialScrollers.forEach(el => el.removeEventListener(this.scrollFunc()))
         } else {
-            this.updateFloat(scrollAncestor)
+            this.updateFloat(e.target.getBoundingClientRect && e.target)
         }
       }
-      window.addEventListener("scroll", this.scrollFunc)
-      if (scrollAncestor) scrollAncestor.addEventListener("scroll", this.scrollFunc)
+      potentialScrollers.forEach(el => el.addEventListener('scroll', this.scrollFunc))
     }
   }
 
@@ -149,10 +147,17 @@ function findWrappingScrollable(node) {
     if (cur.scrollHeight > cur.clientHeight) return cur
 }
 
-function findWrappingScollContainer(node) {
-    for (let cur = node.parentNode; cur; cur = cur.parentNode) {
-        if (cur.scrollHeight > cur.clientHeight && cur.parentNode && cur.scrollHeight > cur.parentNode.scrollHeight) {
-            return cur;
-        }
-    }
+function parentsWhoCOuldScroll(node) {
+  let res = [];
+  for (let cur = node.parentNode; cur; cur = cur.parentNode)
+    res.push(cur);
+  res.push(window);
+  return res;
+}
+
+function findEverythingThatCouldScroll(node) {
+    let res = [window];
+    for (let cur = node.parentNode; cur; cur = cur.parentNode)
+        res.push(cur)
+    return res;
 }
