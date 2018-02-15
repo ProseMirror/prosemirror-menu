@@ -56,7 +56,7 @@ class MenuBarView {
 
     if (options.floating && !isIOS()) {
       this.updateFloat()
-      let potentialScrollers = findEverythingThatCouldScroll(this.wrapper);
+      let potentialScrollers = findEverythingThatCouldScroll(this.wrapper)
       this.scrollFunc = (e) => {
         let root = this.editorView.root
         if (!(root.body || root).contains(this.wrapper)) {
@@ -101,7 +101,7 @@ class MenuBarView {
 
   updateFloat(scrollAncestor) {
     let parent = this.wrapper, editorRect = parent.getBoundingClientRect(),
-        top= scrollAncestor ? Math.max(0, scrollAncestor.getBoundingClientRect().top) : 0;
+        top= scrollAncestor ? Math.max(0, scrollAncestor.getBoundingClientRect().top) : 0
 
     if (this.floating) {
       if (editorRect.top >= top || editorRect.bottom < this.menu.offsetHeight + 10) {
@@ -148,8 +148,8 @@ function findWrappingScrollable(node) {
 }
 
 function findEverythingThatCouldScroll(node) {
-    let res = [window];
+    let res = [window]
     for (let cur = node.parentNode; cur; cur = cur.parentNode)
         res.push(cur)
-    return res;
+    return res
 }
