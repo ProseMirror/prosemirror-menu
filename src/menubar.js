@@ -147,14 +147,6 @@ function findWrappingScrollable(node) {
     if (cur.scrollHeight > cur.clientHeight) return cur
 }
 
-function parentsWhoCOuldScroll(node) {
-  let res = [];
-  for (let cur = node.parentNode; cur; cur = cur.parentNode)
-    res.push(cur);
-  res.push(window);
-  return res;
-}
-
 function findEverythingThatCouldScroll(node) {
     let res = [window];
     for (let cur = node.parentNode; cur; cur = cur.parentNode)
