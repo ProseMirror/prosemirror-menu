@@ -60,7 +60,7 @@ class MenuBarView {
       this.scrollFunc = (e) => {
         let root = this.editorView.root
         if (!(root.body || root).contains(this.wrapper)) {
-            potentialScrollers.forEach(el => el.removeEventListener('scroll', this.scrollFunc))
+            potentialScrollers.forEach(el => el.removeEventListener("scroll", this.scrollFunc))
         } else {
             this.updateFloat(e.target.getBoundingClientRect && e.target)
         }
