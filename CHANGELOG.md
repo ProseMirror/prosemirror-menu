@@ -1,3 +1,9 @@
+## 1.0.4 (2018-03-09)
+
+### Bug fixes
+
+Fixes a bug that prevented the menu bar from properly unregistering its `"scroll"` event handlers when destroyed.
+
 ## 1.0.3 (2018-02-15)
 
 ### Bug fixes
