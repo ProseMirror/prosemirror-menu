@@ -191,8 +191,7 @@ constructors:
  * **`wrapItem`**`(nodeType: NodeType, options: Object) → MenuItem`\
    Build a menu item for wrapping the selection in a given node type.
    Adds `run` and `select` properties to the ones present in
-   `options`. `options.attrs` may be an object or a function, as in
-   `toggleMarkItem`.
+   `options`. `options.attrs` may be an object or a function.
 
  * **`blockTypeItem`**`(nodeType: NodeType, options: Object) → MenuItem`\
    Build a menu item for changing the type of the textblock around the
