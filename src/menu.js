@@ -35,7 +35,8 @@ export class MenuItem {
 
     dom.addEventListener("mousedown", e => {
       e.preventDefault()
-      spec.run(view.state, view.dispatch, view, e)
+      if (!dom.classList.contains(prefix + "-disabled"))
+        spec.run(view.state, view.dispatch, view, e)
     })
 
     function update(state) {
