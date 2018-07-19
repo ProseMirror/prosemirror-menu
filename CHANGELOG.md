@@ -1,3 +1,9 @@
+## 1.0.5 (2018-07-19)
+
+### Bug fixes
+
+Fix issue where menu items would still execute their command when clicked even if disabled.
+
 ## 1.0.4 (2018-03-09)
 
 ### Bug fixes
