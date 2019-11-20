@@ -1,3 +1,11 @@
+## 1.1.1 (2019-11-20)
+
+### Bug fixes
+
+The file referred to in the package's `module` field now is compiled down to ES5.
+
+Rename ES module files to use a .js extension, since Webpack gets confused by .mjs
+
 ## 1.1.0 (2019-11-08)
 
 ### New features
