@@ -1,3 +1,9 @@
+## 1.1.2 (2019-12-02)
+
+### Bug fixes
+
+Downgrade a dependency so that the package can run in IE11 again.
+
 ## 1.1.1 (2019-11-20)
 
 ### Bug fixes
