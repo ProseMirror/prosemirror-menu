@@ -114,10 +114,6 @@ function translate(view, text) {
 //   css:: ?string
 //   Optionally adds a string of inline CSS to the item's DOM
 //   representation.
-//
-//   execEvent:: ?string
-//   Defines which event on the command's DOM representation should
-//   trigger the execution of the command. Defaults to mousedown.
 
 let lastMenuEvent = {time: 0, node: null}
 function markMenuEvent(e) {
