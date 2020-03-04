@@ -1,3 +1,9 @@
+## 1.1.3 (2020-03-04)
+
+### Bug fixes
+
+Update crel dependency to a version that exposes an ES module.
+
 ## 1.1.2 (2019-12-02)
 
 ### Bug fixes
