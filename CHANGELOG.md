@@ -1,3 +1,9 @@
+## 1.1.4 (2020-03-12)
+
+### Bug fixes
+
+Restore compatibility with IE11.
+
 ## 1.1.3 (2020-03-04)
 
 ### Bug fixes
