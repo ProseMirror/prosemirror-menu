@@ -101,16 +101,12 @@ The configuration object passed to the `MenuItem` constructor.
  * **`title`**`: ?string | fn(EditorState) → string`\
    Defines DOM title (mouseover) text for the item.
 
- * **`class`**`: string`\
+ * **`class`**`: ?string`\
    Optionally adds a CSS class to the item's DOM representation.
 
- * **`css`**`: string`\
+ * **`css`**`: ?string`\
    Optionally adds a string of inline CSS to the item's DOM
    representation.
-
- * **`execEvent`**`: string`\
-   Defines which event on the command's DOM representation should
-   trigger the execution of the command. Defaults to mousedown.
 
 ### class Dropdown
 
