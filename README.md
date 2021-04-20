@@ -27,7 +27,7 @@ is the place to report issues.
 
 ## Documentation
 
-When using this module, you should make sure its [`style/menu.css`](/style/menu.css) file
+When using this module, you should make sure its [`style/menu.css`](https://github.com/ProseMirror/prosemirror-menu/blob/master/style/menu.css) file
 is loaded into your page.
 
 ### interface MenuElement
