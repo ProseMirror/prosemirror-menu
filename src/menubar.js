@@ -42,7 +42,8 @@ class MenuBarView {
     this.menu.className = prefix
     this.spacer = null
 
-    editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom)
+    if (editorView.dom.parentNode)
+      editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom)
     this.wrapper.appendChild(editorView.dom)
 
     this.maxHeight = 0
