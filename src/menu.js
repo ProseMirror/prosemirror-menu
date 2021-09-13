@@ -272,7 +272,7 @@ export class DropdownSubmenu {
   }
 }
 
-// :: (EditorView, [union<MenuElement, [MenuElement]>]) → {dom: ?dom.DocumentFragment, update: (EditorState) → bool}
+// :: (EditorView, [union<MenuElement, [MenuElement]>]) → {dom: dom.DocumentFragment, update: (EditorState) → bool}
 // Render the given, possibly nested, array of menu elements into a
 // document fragment, placing separators between them (and ensuring no
 // superfluous separators appear when some of the groups turn out to
