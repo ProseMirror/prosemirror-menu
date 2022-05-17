@@ -1,7 +1,8 @@
 import crel from "crelt"
-import {Plugin} from "prosemirror-state"
+import {Plugin, EditorState} from "prosemirror-state"
+import {EditorView} from "prosemirror-view"
 
-import {renderGrouped} from "./menu"
+import {renderGrouped, MenuElement} from "./menu"
 
 const prefix = "ProseMirror-menubar"
 
@@ -11,44 +12,44 @@ function isIOS() {
   return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) && /Mobile\/\w+/.test(agent)
 }
 
-// :: (Object) → Plugin
-// A plugin that will place a menu bar above the editor. Note that
-// this involves wrapping the editor in an additional `<div>`.
-//
-//   options::-
-//   Supports the following options:
-//
-//     content:: [[MenuElement]]
-//     Provides the content of the menu, as a nested array to be
-//     passed to `renderGrouped`.
-//
-//     floating:: ?bool
-//     Determines whether the menu floats, i.e. whether it sticks to
-//     the top of the viewport when the editor is partially scrolled
-//     out of view.
-export function menuBar(options) {
+/// A plugin that will place a menu bar above the editor. Note that
+/// this involves wrapping the editor in an additional `<div>`.
+export function menuBar(options: {
+  /// Provides the content of the menu, as a nested array to be
+  /// passed to `renderGrouped`.
+  content: readonly (readonly MenuElement[])[]
+
+  /// Determines whether the menu floats, i.e. whether it sticks to
+  /// the top of the viewport when the editor is partially scrolled
+  /// out of view.
+  floating?: boolean
+}): Plugin {
   return new Plugin({
     view(editorView) { return new MenuBarView(editorView, options) }
   })
 }
 
 class MenuBarView {
-  constructor(editorView, options) {
-    this.editorView = editorView
-    this.options = options
+  wrapper: HTMLElement
+  menu: HTMLElement
+  spacer: HTMLElement | null = null
+  maxHeight = 0
+  widthForMaxHeight = 0
+  floating = false
+  contentUpdate: (state: EditorState) => boolean
+  scrollHandler: ((event: Event) => void) | null = null
 
+  constructor(
+    readonly editorView: EditorView,
+    readonly options: Parameters<typeof menuBar>[0]
+  ) {
     this.wrapper = crel("div", {class: prefix + "-wrapper"})
     this.menu = this.wrapper.appendChild(crel("div", {class: prefix}))
     this.menu.className = prefix
-    this.spacer = null
 
     if (editorView.dom.parentNode)
       editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom)
     this.wrapper.appendChild(editorView.dom)
-
-    this.maxHeight = 0
-    this.widthForMaxHeight = 0
-    this.floating = false
 
     let {dom, update} = renderGrouped(this.editorView, this.options.content)
     this.contentUpdate = update
@@ -58,15 +59,14 @@ class MenuBarView {
     if (options.floating && !isIOS()) {
       this.updateFloat()
       let potentialScrollers = getAllWrapping(this.wrapper)
-      this.scrollFunc = (e) => {
+      this.scrollHandler = (e: Event) => {
         let root = this.editorView.root
-        if (!(root.body || root).contains(this.wrapper)) {
-            potentialScrollers.forEach(el => el.removeEventListener("scroll", this.scrollFunc))
-        } else {
-            this.updateFloat(e.target.getBoundingClientRect && e.target)
-        }
+        if (!((root as Document).body || root).contains(this.wrapper))
+          potentialScrollers.forEach(el => el.removeEventListener("scroll", this.scrollHandler!))
+        else
+          this.updateFloat((e.target as HTMLElement).getBoundingClientRect ? e.target as HTMLElement : undefined)
       }
-      potentialScrollers.forEach(el => el.addEventListener('scroll', this.scrollFunc))
+      potentialScrollers.forEach(el => el.addEventListener('scroll', this.scrollHandler!))
     }
   }
 
@@ -88,7 +88,7 @@ class MenuBarView {
   }
 
   updateScrollCursor() {
-    let selection = this.editorView.root.getSelection()
+    let selection = (this.editorView.root as Document).getSelection()!
     if (!selection.focusNode) return
     let rects = selection.getRangeAt(0).getClientRects()
     let selRect = rects[selectionIsInverted(selection) ? 0 : rects.length - 1]
@@ -100,7 +100,7 @@ class MenuBarView {
     }
   }
 
-  updateFloat(scrollAncestor) {
+  updateFloat(scrollAncestor?: HTMLElement) {
     let parent = this.wrapper, editorRect = parent.getBoundingClientRect(),
         top = scrollAncestor ? Math.max(0, scrollAncestor.getBoundingClientRect().top) : 0
 
@@ -109,7 +109,7 @@ class MenuBarView {
         this.floating = false
         this.menu.style.position = this.menu.style.left = this.menu.style.top = this.menu.style.width = ""
         this.menu.style.display = ""
-        this.spacer.parentNode.removeChild(this.spacer)
+        this.spacer!.parentNode!.removeChild(this.spacer!)
         this.spacer = null
       } else {
         let border = (parent.offsetWidth - parent.clientWidth) / 2
@@ -138,19 +138,19 @@ class MenuBarView {
 }
 
 // Not precise, but close enough
-function selectionIsInverted(selection) {
+function selectionIsInverted(selection: Selection) {
   if (selection.anchorNode == selection.focusNode) return selection.anchorOffset > selection.focusOffset
-  return selection.anchorNode.compareDocumentPosition(selection.focusNode) == Node.DOCUMENT_POSITION_FOLLOWING
+  return selection.anchorNode!.compareDocumentPosition(selection.focusNode!) == Node.DOCUMENT_POSITION_FOLLOWING
 }
 
-function findWrappingScrollable(node) {
+function findWrappingScrollable(node: Node) {
   for (let cur = node.parentNode; cur; cur = cur.parentNode)
-    if (cur.scrollHeight > cur.clientHeight) return cur
+    if ((cur as HTMLElement).scrollHeight > (cur as HTMLElement).clientHeight) return cur as HTMLElement
 }
 
-function getAllWrapping(node) {
-    let res = [window]
-    for (let cur = node.parentNode; cur; cur = cur.parentNode)
-        res.push(cur)
-    return res
+function getAllWrapping(node: Node) {
+  let res: (Node | Window)[] = [window]
+  for (let cur = node.parentNode; cur; cur = cur.parentNode)
+    res.push(cur)
+  return res
 }

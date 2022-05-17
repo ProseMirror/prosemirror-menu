@@ -1,6 +1,10 @@
+This module defines a number of building blocks for ProseMirror menus,
+along with a [menu bar](#menu.menuBar) implementation.
+
 @MenuElement
 @MenuItem
 @MenuItemSpec
+@IconSpec
 @Dropdown
 @DropdownSubmenu
 @menuBar
