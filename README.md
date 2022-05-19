@@ -27,8 +27,12 @@ is the place to report issues.
 
 ## Documentation
 
-When using this module, you should make sure its [`style/menu.css`](https://github.com/ProseMirror/prosemirror-menu/blob/master/style/menu.css) file
-is loaded into your page.
+This module defines a number of building blocks for ProseMirror menus,
+along with a [menu bar](#menu.menuBar) implementation.
+
+When using this module, you should make sure its
+[`style/menu.css`](https://github.com/ProseMirror/prosemirror-menu/blob/master/style/menu.css)
+file is loaded into your page.
 
 ### interface MenuElement
 
@@ -36,22 +40,23 @@ The types defined in this module aren't the only thing you can
 display in your menu. Anything that conforms to this interface can
 be put into a menu structure.
 
- * **`render`**`(pm: EditorView) → {dom: dom.Node, update: fn(EditorState) → bool}`\
+ * **`render`**`(pm: EditorView) → {dom: HTMLElement, update: fn(state: EditorState) → boolean}`\
    Render the element for display in the menu. Must return a DOM
    element and a function that can be used to update the element to
-   a new state. The `update` function will return false if the
+   a new state. The `update` function must return false if the
    update hid the entire element.
 
 ### class MenuItem
 
-An icon or label that, when clicked, executes a command.
+ implements `MenuElement`An icon or label that, when clicked, executes a command.
 
- * `new `**`MenuItem`**`(spec: MenuItemSpec)`
+ * `new `**`MenuItem`**`(spec: MenuItemSpec)`\
+   Create a menu item.
 
  * **`spec`**`: MenuItemSpec`\
-   The spec used to create the menu item.
+   The spec used to create this item.
 
- * **`render`**`(view: EditorView) → {dom: dom.Node, update: fn(EditorState) → bool}`\
+ * **`render`**`(view: EditorView) → {dom: HTMLElement, update: fn(state: EditorState) → boolean}`\
    Renders the icon according to its [display
    spec](#menu.MenuItemSpec.display), and adds an event handler which
    executes the command when the representation is clicked.
@@ -60,45 +65,36 @@ An icon or label that, when clicked, executes a command.
 
 The configuration object passed to the `MenuItem` constructor.
 
-
- * **`run`**`(EditorState, fn(Transaction), EditorView, dom.Event)`\
+ * **`run`**`(state: EditorState, dispatch: fn(tr: Transaction), view: EditorView, event: Event)`\
    The function to execute when the menu item is activated.
 
- * **`select`**`: ?fn(EditorState) → bool`\
+ * **`select`**`: ?fn(state: EditorState) → boolean`\
    Optional function that is used to determine whether the item is
    appropriate at the moment. Deselected items will be hidden.
 
- * **`enable`**`: ?fn(EditorState) → bool`\
+ * **`enable`**`: ?fn(state: EditorState) → boolean`\
    Function that is used to determine if the item is enabled. If
    given and returning false, the item will be given a disabled
    styling.
 
- * **`active`**`: ?fn(EditorState) → bool`\
+ * **`active`**`: ?fn(state: EditorState) → boolean`\
    A predicate function to determine whether the item is 'active' (for
    example, the item for toggling the strong mark might be active then
    the cursor is in strong text).
 
- * **`render`**`: ?fn(EditorView) → dom.Node`\
+ * **`render`**`: ?fn(view: EditorView) → HTMLElement`\
    A function that renders the item. You must provide either this,
    [`icon`](#menu.MenuItemSpec.icon), or [`label`](#MenuItemSpec.label).
 
- * **`icon`**`: ?Object`\
-   Describes an icon to show for this item. The object may specify
-   an SVG icon, in which case its `path` property should be an [SVG
-   path
-   spec](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d),
-   and `width` and `height` should provide the viewbox in which that
-   path exists. Alternatively, it may have a `text` property
-   specifying a string of text that makes up the icon, with an
-   optional `css` property giving additional CSS styling for the
-   text. _Or_ it may contain `dom` property containing a DOM node.
+ * **`icon`**`: ?IconSpec`\
+   Describes an icon to show for this item.
 
  * **`label`**`: ?string`\
    Makes the item show up as a text label. Mostly useful for items
    wrapped in a [drop-down](#menu.Dropdown) or similar menu. The object
    should have a `label` property providing the text to display.
 
- * **`title`**`: ?string | fn(EditorState) → string`\
+ * **`title`**`: ?string | fn(state: EditorState) → string`\
    Defines DOM title (mouseover) text for the item.
 
  * **`class`**`: ?string`\
@@ -108,62 +104,43 @@ The configuration object passed to the `MenuItem` constructor.
    Optionally adds a string of inline CSS to the item's DOM
    representation.
 
+ * type **`IconSpec`**
+   ` = {path: string, width: number, height: number} | {text: string, css?: ?string} | {dom: Node}`\
+   Specifies an icon. May be either an SVG icon, in which case its
+   `path` property should be an [SVG path
+   spec](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/d),
+   and `width` and `height` should provide the viewbox in which that
+   path exists. Alternatively, it may have a `text` property
+   specifying a string of text that makes up the icon, with an
+   optional `css` property giving additional CSS styling for the
+   text. _Or_ it may contain `dom` property containing a DOM node.
+
 ### class Dropdown
 
-A drop-down menu, displayed as a label with a downwards-pointing
+ implements `MenuElement`A drop-down menu, displayed as a label with a downwards-pointing
 triangle to the right of it.
 
- * `new `**`Dropdown`**`(content: [MenuElement], options: ?Object)`\
-   Create a dropdown wrapping the elements. Options may include
-   the following properties:
+ * `new `**`Dropdown`**`(content: readonly MenuElement[] | MenuElement, options: ?Object = {})`\
+   Create a dropdown wrapping the elements.
 
-   **`label`**`: string`
-     : The label to show on the drop-down control.
-
-   **`title`**`: string`
-     : Sets the
-       [`title`](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/title)
-       attribute given to the menu control.
-
-   **`class`**`: string`
-     : When given, adds an extra CSS class to the menu control.
-
-   **`css`**`: string`
-     : When given, adds an extra set of CSS styles to the menu control.
-
- * **`render`**`(view: EditorView) → {dom: dom.Node, update: fn(EditorState)}`\
+ * **`render`**`(view: EditorView) → {dom: HTMLElement, update: fn(state: EditorState) → boolean}`\
    Render the dropdown menu and sub-items.
 
 ### class DropdownSubmenu
 
-Represents a submenu wrapping a group of elements that start
+ implements `MenuElement`Represents a submenu wrapping a group of elements that start
 hidden and expand to the right when hovered over or tapped.
 
- * `new `**`DropdownSubmenu`**`(content: [MenuElement], options: ?Object)`\
+ * `new `**`DropdownSubmenu`**`(content: readonly MenuElement[] | MenuElement, options: ?Object = {})`\
    Creates a submenu for the given group of menu elements. The
    following options are recognized:
 
-   **`label`**`: string`
-     : The label to show on the submenu.
-
- * **`render`**`(view: EditorView) → {dom: dom.Node, update: fn(EditorState) → bool}`\
+ * **`render`**`(view: EditorView) → {dom: HTMLElement, update: fn(state: EditorState) → boolean}`\
    Renders the submenu.
 
  * **`menuBar`**`(options: Object) → Plugin`\
    A plugin that will place a menu bar above the editor. Note that
    this involves wrapping the editor in an additional `<div>`.
-
-    * **`options`**`: Object`\
-      Supports the following options:
-
-       * **`content`**`: [[MenuElement]]`\
-         Provides the content of the menu, as a nested array to be
-         passed to `renderGrouped`.
-
-       * **`floating`**`: ?bool`\
-         Determines whether the menu floats, i.e. whether it sticks to
-         the top of the viewport when the editor is partially scrolled
-         out of view.
 
 
 This module exports the following pre-built items or item
@@ -184,12 +161,13 @@ constructors:
  * **`redoItem`**`: MenuItem`\
    Menu item for the `redo` command.
 
- * **`wrapItem`**`(nodeType: NodeType, options: Object) → MenuItem`\
+ * **`wrapItem`**`(nodeType: NodeType, options: Partial & {attrs?: ?Attrs}) → MenuItem`\
    Build a menu item for wrapping the selection in a given node type.
    Adds `run` and `select` properties to the ones present in
-   `options`. `options.attrs` may be an object or a function.
+   `options`. `options.attrs` may be an object that provides
+   attributes for the wrapping node.
 
- * **`blockTypeItem`**`(nodeType: NodeType, options: Object) → MenuItem`\
+ * **`blockTypeItem`**`(nodeType: NodeType, options: Partial & {attrs?: ?Attrs}) → MenuItem`\
    Build a menu item for changing the type of the textblock around the
    selection to the given type. Provides `run`, `active`, and `select`
    properties. Others must be given in `options`. `options.attrs` may
@@ -206,8 +184,12 @@ To construct your own items, these icons may be useful:
    `MenuItem`.
 
 
- * **`renderGrouped`**`(view: EditorView, content: [MenuElement | [MenuElement]]) → {dom: ?dom.DocumentFragment, update: fn(EditorState) → bool}`\
+ * **`renderGrouped`**`(view: EditorView, content: readonly readonly MenuElement[][]) → {`\
+   `  dom: DocumentFragment,`\
+   `  update: fn(state: EditorState) → boolean`\
+   `}`\
    Render the given, possibly nested, array of menu elements into a
    document fragment, placing separators between them (and ensuring no
    superfluous separators appear when some of the groups turn out to
    be empty).
+
