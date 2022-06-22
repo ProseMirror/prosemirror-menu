@@ -13,7 +13,7 @@
     },
     "./style/menu.css": "./style/menu.css"
   },
-  "sideEffects": false,
+  "sideEffects": ["./style/menu.css"],
   "style": "style/menu.css",
   "license": "MIT",
   "maintainers": [
