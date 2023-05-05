@@ -177,7 +177,7 @@ export class Dropdown implements MenuElement {
                      translate(view, this.options.label || ""))
     if (this.options.title) label.setAttribute("title", translate(view, this.options.title))
     let wrap = crel("div", {class: prefix + "-dropdown-wrap"}, label)
-    let open: {close: () => void, node: HTMLElement} | null = null
+    let open: {close: () => boolean, node: HTMLElement} | null = null
     let listeningOnClose: (() => void) | null = null
     let close = () => {
       if (open && open.close()) {
@@ -212,8 +212,8 @@ export class Dropdown implements MenuElement {
     let menuDOM = crel("div", {class: prefix + "-dropdown-menu " + (this.options.class || "")}, items)
 
     let done = false
-    function close() {
-      if (done) return
+    function close(): boolean {
+      if (done) return false
       done = true
       dom.removeChild(menuDOM)
       return true
