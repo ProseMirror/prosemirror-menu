@@ -34,7 +34,7 @@ export class MenuItem implements MenuElement {
   render(view: EditorView) {
     let spec = this.spec
     let dom = spec.render ? spec.render(view)
-        : spec.icon ? getIcon(spec.icon)
+        : spec.icon ? getIcon(view.root, spec.icon)
         : spec.label ? crel("div", null, translate(view, spec.label))
         : null
     if (!dom) throw new RangeError("MenuItem without icon or label property")
@@ -171,6 +171,7 @@ export class Dropdown implements MenuElement {
   /// Render the dropdown menu and sub-items.
   render(view: EditorView) {
     let content = renderDropdownItems(this.content, view)
+    let win = view.dom.ownerDocument.defaultView || window
 
     let label = crel("div", {class: prefix + "-dropdown " + (this.options.class || ""),
                              style: this.options.css},
@@ -182,7 +183,7 @@ export class Dropdown implements MenuElement {
     let close = () => {
       if (open && open.close()) {
         open = null
-        window.removeEventListener("mousedown", listeningOnClose!)
+        win.removeEventListener("mousedown", listeningOnClose!)
       }
     }
     label.addEventListener("mousedown", e => {
@@ -192,7 +193,7 @@ export class Dropdown implements MenuElement {
         close()
       } else {
         open = this.expand(wrap, content.dom)
-        window.addEventListener("mousedown", listeningOnClose = () => {
+        win.addEventListener("mousedown", listeningOnClose = () => {
           if (!isMenuEvent(wrap)) close()
         })
       }
@@ -270,6 +271,7 @@ export class DropdownSubmenu implements MenuElement {
   /// Renders the submenu.
   render(view: EditorView) {
     let items = renderDropdownItems(this.content, view)
+    let win = view.dom.ownerDocument.defaultView || window
 
     let label = crel("div", {class: prefix + "-submenu-label"}, translate(view, this.options.label || ""))
     let wrap = crel("div", {class: prefix + "-submenu-wrap"}, label,
@@ -280,10 +282,10 @@ export class DropdownSubmenu implements MenuElement {
       markMenuEvent(e)
       setClass(wrap, prefix + "-submenu-wrap-active", false)
       if (!listeningOnClose)
-        window.addEventListener("mousedown", listeningOnClose = () => {
+        win.addEventListener("mousedown", listeningOnClose = () => {
           if (!isMenuEvent(wrap)) {
             wrap.classList.remove(prefix + "-submenu-wrap-active")
-            window.removeEventListener("mousedown", listeningOnClose!)
+            win.removeEventListener("mousedown", listeningOnClose!)
             listeningOnClose = null
           }
         })

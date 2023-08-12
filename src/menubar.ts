@@ -114,7 +114,8 @@ class MenuBarView {
       } else {
         let border = (parent.offsetWidth - parent.clientWidth) / 2
         this.menu.style.left = (editorRect.left + border) + "px"
-        this.menu.style.display = (editorRect.top > window.innerHeight ? "none" : "")
+        this.menu.style.display = editorRect.top > (this.editorView.dom.ownerDocument.defaultView || window).innerHeight
+          ? "none" : ""
         if (scrollAncestor) this.menu.style.top = top + "px"
       }
     } else {
@@ -149,7 +150,7 @@ function findWrappingScrollable(node: Node) {
 }
 
 function getAllWrapping(node: Node) {
-  let res: (Node | Window)[] = [window]
+  let res: (Node | Window)[] = [node.ownerDocument!.defaultView || window]
   for (let cur = node.parentNode; cur; cur = cur.parentNode)
     res.push(cur)
   return res
