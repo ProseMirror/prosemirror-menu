@@ -1,3 +1,9 @@
+## 1.2.3 (2023-08-16)
+
+### Bug fixes
+
+Don't directly use the global `window`/`document`, to fix use in a different frame or shadow root.
+
 ## 1.2.2 (2023-05-17)
 
 ### Bug fixes
