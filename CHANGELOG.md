@@ -1,3 +1,9 @@
+## 1.2.4 (2023-08-20)
+
+### Bug fixes
+
+Fix a bug where icon creation crashed because it couldn't find a Document value.
+
 ## 1.2.3 (2023-08-16)
 
 ### Bug fixes
