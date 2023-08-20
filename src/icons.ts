@@ -14,7 +14,7 @@ export function getIcon(
   root: Document | ShadowRoot,
   icon: {path: string, width: number, height: number} | {text: string, css?: string} | {dom: Node}
 ): HTMLElement {
-  let doc = root.ownerDocument!
+  let doc = (root.nodeType == 9 ? root as Document : root.ownerDocument) || document
   let node = doc.createElement("div")
   node.className = prefix
   if ((icon as any).path) {
@@ -36,7 +36,7 @@ export function getIcon(
 }
 
 function buildSVG(root: Document | ShadowRoot, name: string, data: {width: number, height: number, path: string}) {
-  let [doc, top] = root.nodeType == 9 ? [root as Document, (root as Document).body] : [root.ownerDocument!, root]
+  let [doc, top] = root.nodeType == 9 ? [root as Document, (root as Document).body] : [root.ownerDocument || document, root]
   let collection = doc.getElementById(prefix + "-collection") as Element
   if (!collection) {
     collection = doc.createElementNS(SVG, "svg")
