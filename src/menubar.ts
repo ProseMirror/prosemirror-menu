@@ -38,11 +38,13 @@ class MenuBarView {
   floating = false
   contentUpdate: (state: EditorState) => boolean
   scrollHandler: ((event: Event) => void) | null = null
+  root: Document | ShadowRoot
 
   constructor(
     readonly editorView: EditorView,
     readonly options: Parameters<typeof menuBar>[0]
   ) {
+    this.root = editorView.root
     this.wrapper = crel("div", {class: prefix + "-wrapper"})
     this.menu = this.wrapper.appendChild(crel("div", {class: prefix}))
     this.menu.className = prefix
@@ -71,6 +73,12 @@ class MenuBarView {
   }
 
   update() {
+    if (this.editorView.root != this.root) {
+      let {dom, update} = renderGrouped(this.editorView, this.options.content)
+      this.contentUpdate = update
+      this.menu.replaceChild(dom, this.menu.firstChild!)
+      this.root = this.editorView.root
+    }
     this.contentUpdate(this.editorView.state)
 
     if (this.floating) {
