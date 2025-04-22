@@ -1,6 +1,6 @@
 {
   "name": "prosemirror-menu",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Simple menu elements for ProseMirror",
   "type": "module",
   "main": "dist/index.cjs",

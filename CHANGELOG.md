@@ -1,3 +1,9 @@
+## 1.2.5 (2025-04-22)
+
+### Bug fixes
+
+Make sure the menu is re-rendered when the editor's root changes, so that it doesn't reference icons whose SVG lives in another root.
+
 ## 1.2.4 (2023-08-20)
 
 ### Bug fixes
