@@ -12,12 +12,26 @@ function isIOS() {
   return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) && /Mobile\/\w+/.test(agent)
 }
 
+function flatten<T>(arr: readonly(readonly T[])[]): readonly T[] {
+  return arr.reduce(function (flat, item) {
+    return flat.concat(item)
+  }, [])
+}
+
 /// A plugin that will place a menu bar above the editor. Note that
 /// this involves wrapping the editor in an additional `<div>`.
 export function menuBar(options: {
   /// Provides the content of the menu, as a nested array to be
   /// passed to `renderGrouped`.
   content: readonly (readonly MenuElement[])[]
+
+  /// For accessibility purposes, specify if the menu is displayed
+  /// horizontally or vertically. The default is "horizontal".
+  orientation?: "horizontal" | "vertical"
+
+  /// Determines whether the menu is placed before or after the editor in the DOM.
+  /// The default is "before".
+  position?: "before" | "after"
 
   /// Determines whether the menu floats, i.e. whether it sticks to
   /// the top of the viewport when the editor is partially scrolled
@@ -32,6 +46,8 @@ export function menuBar(options: {
 class MenuBarView {
   wrapper: HTMLElement
   menu: HTMLElement
+  focusables: HTMLElement[] = []
+  focusIndex = 0
   spacer: HTMLElement | null = null
   maxHeight = 0
   widthForMaxHeight = 0
@@ -46,17 +62,23 @@ class MenuBarView {
   ) {
     this.root = editorView.root
     this.wrapper = crel("div", {class: prefix + "-wrapper"})
-    this.menu = this.wrapper.appendChild(crel("div", {class: prefix}))
+    this.menu = this.wrapper.appendChild(crel("div", {class: prefix, role: "toolbar"}))
     this.menu.className = prefix
+    this.menu.ariaControlsElements = [editorView.dom]
+    if (options.orientation) this.menu.ariaOrientation = options.orientation
 
     if (editorView.dom.parentNode)
       editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom)
-    this.wrapper.appendChild(editorView.dom)
+    if (options.position === "after") {
+      this.wrapper.insertBefore(editorView.dom, this.wrapper.firstChild)
+    } else {
+      this.wrapper.appendChild(editorView.dom)
+    }
 
-    let {dom, update} = renderGrouped(this.editorView, this.options.content)
+    let {dom, update, focusables} = renderGrouped(this.editorView, this.options.content)
     this.contentUpdate = update
+    this.focusables = focusables
     this.menu.appendChild(dom)
-    this.update()
 
     if (options.floating && !isIOS()) {
       this.updateFloat()
@@ -69,6 +91,90 @@ class MenuBarView {
           this.updateFloat((e.target as HTMLElement).getBoundingClientRect ? e.target as HTMLElement : undefined)
       }
       potentialScrollers.forEach(el => el.addEventListener('scroll', this.scrollHandler!))
+    }
+
+    // set `tabindex` to -1 for all but the first focusable item
+    for (let i = 1; i < focusables.length; i++) {
+      focusables[i].setAttribute("tabindex", "-1")
+    }
+
+    // update focusIndex on focus change
+    for (let i = 0; i < focusables.length; i++) {
+      const focusable = focusables[i]
+      focusable.addEventListener("focus", () => {
+        if (this.focusIndex === i) return
+        const prevFocusItem = this.focusables[this.focusIndex]
+        prevFocusItem.setAttribute("tabindex", "-1")
+        focusable.setAttribute("tabindex", "0")
+        this.focusIndex = i
+      })
+    }
+
+    const orientation = this.options.orientation || "horizontal"
+    const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
+    const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
+
+    this.menu.addEventListener("keydown", (event) => {
+      if (event.key === nextFocusKey) {
+        const nextIndex = this.makeContentIndexMover(this.focusIndex, 1)(editorView.state)
+        if (typeof nextIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(nextIndex)
+        }
+      } else if (event.key === prevFocusKey) {
+        const prevIndex = this.makeContentIndexMover(this.focusIndex, -1)(editorView.state)
+        if (typeof prevIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(prevIndex)
+        }
+      } else if (event.key === "Home") {
+        const startIndex = this.makeContentIndexMover(-1, 1)(editorView.state)
+        if (typeof startIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(startIndex)
+        }
+      } else if (event.key === "End") {
+        const endIndex = this.makeContentIndexMover(this.focusables.length, -1)(editorView.state)
+        if (typeof endIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(endIndex)
+        }
+      }
+    })
+
+    this.update()
+  }
+
+  setFocusToIndex(index: number) {
+    if (this.focusables.length <= 1) return
+    if (index < 0 || index >= this.focusables.length)
+      throw new RangeError(`MenuBar focus index must be between 0 and ${this.focusables.length-1}, got ${index}`)
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    const nextFocusItem = this.focusables[index]
+    nextFocusItem.setAttribute("tabindex", "0")
+    this.focusIndex = index
+    nextFocusItem.focus()
+  }
+
+  // Returns a function that moves an index through the flattened `this.options.content` array,
+  // skipping deselected items.
+  makeContentIndexMover(startIndex: number, delta: 1 | -1 = 1) {
+    const content = flatten(this.options.content), length = content.length
+    return function (state: EditorState): number | null {
+      let nextIndex = (startIndex + delta + length) % length
+      const firstTestedIndex = nextIndex
+      let spec = content[nextIndex]
+      let selected = spec.selected ? spec.selected(state) : true
+      while (!selected) {
+        nextIndex = (nextIndex + delta + length) % length
+        // If we have looped all the way around to the first tested index,
+        // we're not going to get a result (all content is deselected).
+        if (nextIndex === firstTestedIndex) return null
+        spec = content[nextIndex]
+        selected = spec.selected ? spec.selected(state) : true
+      }
+      return nextIndex;
     }
   }
 
