@@ -12,6 +12,12 @@ function isIOS() {
   return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) && /Mobile\/\w+/.test(agent)
 }
 
+function flatten<T>(arr: readonly(readonly T[])[]): readonly T[] {
+  return arr.reduce(function (flat, item) {
+    return flat.concat(item)
+  }, [])
+}
+
 /// A plugin that will place a menu bar above the editor. Note that
 /// this involves wrapping the editor in an additional `<div>`.
 export function menuBar(options: {
@@ -110,61 +116,66 @@ class MenuBarView {
 
     this.menu.addEventListener("keydown", (event) => {
       if (event.key === nextFocusKey) {
-        event.preventDefault()
-        this.setFocusToNext()
+        const nextIndex = this.makeContentIndexMover(this.focusIndex, 1)(editorView.state)
+        if (typeof nextIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(nextIndex)
+        }
       } else if (event.key === prevFocusKey) {
-        event.preventDefault()
-        this.setFocusToPrev()
+        const prevIndex = this.makeContentIndexMover(this.focusIndex, -1)(editorView.state)
+        if (typeof prevIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(prevIndex)
+        }
       } else if (event.key === "Home") {
-        event.preventDefault()
-        this.setFocusToFirst()
+        const startIndex = this.makeContentIndexMover(-1, 1)(editorView.state)
+        if (typeof startIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(startIndex)
+        }
       } else if (event.key === "End") {
-        event.preventDefault()
-        this.setFocusToLast()
+        const endIndex = this.makeContentIndexMover(this.focusables.length, -1)(editorView.state)
+        if (typeof endIndex === "number") {
+          event.preventDefault()
+          this.setFocusToIndex(endIndex)
+        }
       }
     })
 
     this.update()
   }
 
-  setFocusToNext() {
+  setFocusToIndex(index: number) {
     if (this.focusables.length <= 1) return
+    if (index < 0 || index >= this.focusables.length)
+      throw new RangeError(`MenuBar focus index must be between 0 and ${this.focusables.length-1}, got ${index}`)
     const currentFocusItem = this.focusables[this.focusIndex]
     currentFocusItem.setAttribute("tabindex", "-1")
-    this.focusIndex = (this.focusIndex + 1) % this.focusables.length
-    const nextFocusItem = this.focusables[this.focusIndex]
+    const nextFocusItem = this.focusables[index]
     nextFocusItem.setAttribute("tabindex", "0")
+    this.focusIndex = index
     nextFocusItem.focus()
   }
 
-  setFocusToPrev() {
-    if (this.focusables.length <= 1) return
-    const currentFocusItem = this.focusables[this.focusIndex]
-    currentFocusItem.setAttribute("tabindex", "-1")
-    this.focusIndex = (this.focusIndex - 1 + this.focusables.length) % this.focusables.length
-    const prevFocusItem = this.focusables[this.focusIndex]
-    prevFocusItem.setAttribute("tabindex", "0")
-    prevFocusItem.focus()
-  }
-
-  setFocusToFirst() {
-    if (this.focusables.length === 0) return
-    const currentFocusItem = this.focusables[this.focusIndex]
-    currentFocusItem.setAttribute("tabindex", "-1")
-    this.focusIndex = 0
-    const firstFocusItem = this.focusables[0]
-    firstFocusItem.setAttribute("tabindex", "0")
-    firstFocusItem.focus()
-  }
-
-  setFocusToLast() {
-    if (this.focusables.length === 0) return
-    const currentFocusItem = this.focusables[this.focusIndex]
-    currentFocusItem.setAttribute("tabindex", "-1")
-    this.focusIndex = this.focusables.length - 1
-    const lastFocusItem = this.focusables[this.focusIndex]
-    lastFocusItem.setAttribute("tabindex", "0")
-    lastFocusItem.focus()
+  // Returns a function that moves an index through the flattened `this.options.content` array,
+  // skipping deselected items.
+  makeContentIndexMover(startIndex: number, delta: 1 | -1 = 1) {
+    const content = flatten(this.options.content), length = content.length
+    return function (state: EditorState): number | null {
+      let nextIndex = (startIndex + delta + length) % length
+      const firstTestedIndex = nextIndex
+      let spec = content[nextIndex]
+      let selected = spec.selected ? spec.selected(state) : true
+      while (!selected) {
+        nextIndex = (nextIndex + delta + length) % length
+        // If we have looped all the way around to the first tested index,
+        // we're not going to get a result (all content is deselected).
+        if (nextIndex === firstTestedIndex) return null
+        spec = content[nextIndex]
+        selected = spec.selected ? spec.selected(state) : true
+      }
+      return nextIndex;
+    }
   }
 
   update() {
