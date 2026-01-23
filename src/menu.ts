@@ -158,6 +158,10 @@ function isMenuEvent(wrapper: HTMLElement) {
 export class Dropdown implements MenuElement {
   /// @internal
   content: readonly MenuElement[]
+  /// @internal
+  focusables: HTMLElement[] = []
+  /// @internal
+  focusIndex = 0
 
   /// Create a dropdown wrapping the elements.
   constructor(
@@ -180,6 +184,10 @@ export class Dropdown implements MenuElement {
 
       /// When true, renders the contents of the dropdown in an `<ol>` element, instead of the default `<ul>` element.
       ordered?: boolean
+
+      /// For accessibility purposes, specify if the menu is displayed
+      /// horizontally or vertically. The default is "vertical".
+      orientation?: "horizontal" | "vertical"
     } = {}) {
     this.options = options || {}
     this.content = Array.isArray(content) ? content : [content]
@@ -187,12 +195,19 @@ export class Dropdown implements MenuElement {
 
   /// Render the dropdown menu and sub-items.
   render(view: EditorView) {
-    let content = renderDropdownItems(this.content, view)
+    let content = renderDropdownItems(this.content, view, this.options)
+    this.focusables = content.focusables
     let win = view.dom.ownerDocument.defaultView || window
 
-    let btn = crel("button", {class: prefix + "-dropdown " + (this.options.class || ""),
-                             style: this.options.css},
-                     translate(view, this.options.label || ""))
+    let btn = crel(
+      "button", {
+        class: prefix + "-dropdown " + (this.options.class || ""),
+        style: this.options.css,
+        "aria-haspopup": "menu",
+        "aria-expanded": "false"
+      },
+      translate(view, this.options.label || "")
+    )
     if (this.options.title) btn.setAttribute("title", translate(view, this.options.title))
     let wrap = crel("div", {class: prefix + "-dropdown-wrap"}, btn)
     let open: {close: () => boolean, node: HTMLElement} | null = null
@@ -209,9 +224,32 @@ export class Dropdown implements MenuElement {
       if (open) {
         close()
       } else {
-        open = this.expand(wrap, content.dom)
+        open = this.expand(wrap, content.dom, btn)
         win.addEventListener("click", listeningOnClose = () => {
           if (!isMenuEvent(wrap)) close()
+        })
+
+        const orientation = this.options.orientation || "vertical"
+        const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
+        const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
+        open.node.addEventListener("keydown", (event) => {
+          markMenuEvent(event)
+          if (event.key === nextFocusKey) {
+            event.preventDefault()
+            this.setFocusToNext()
+          } else if (event.key === prevFocusKey) {
+            event.preventDefault()
+            this.setFocusToPrev()
+          } else if (event.key === "Home") {
+            event.preventDefault()
+            this.setFocusToFirst()
+          } else if (event.key === "End") {
+            event.preventDefault()
+            this.setFocusToLast()
+          } else if (event.key === "Escape") {
+            event.preventDefault()
+            close()
+          }
         })
       }
     })
@@ -226,7 +264,7 @@ export class Dropdown implements MenuElement {
   }
 
   /// @internal
-  expand(dom: HTMLElement, items: readonly Node[] | HTMLElement) {
+  expand(dom: HTMLElement, items: HTMLElement, trigger: HTMLElement) {
     let menuDOM = crel("div", {class: prefix + "-dropdown-menu " + (this.options.class || "")}, items)
 
     let done = false
@@ -234,18 +272,73 @@ export class Dropdown implements MenuElement {
       if (done) return false
       done = true
       dom.removeChild(menuDOM)
+      trigger.ariaControlsElements = []
+      trigger.setAttribute("aria-expanded", "false")
       return true
     }
+
     dom.appendChild(menuDOM)
+    trigger.ariaControlsElements = [items]
+    trigger.setAttribute("aria-expanded", "true")
+    this.focusables[0].focus()
     return {close, node: menuDOM}
+  }
+
+  setFocusToNext() {
+    if (this.focusables.length <= 1) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = (this.focusIndex + 1) % this.focusables.length
+    const nextFocusItem = this.focusables[this.focusIndex]
+    nextFocusItem.setAttribute("tabindex", "0")
+    nextFocusItem.focus()
+  }
+
+  setFocusToPrev() {
+    if (this.focusables.length <= 1) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = (this.focusIndex - 1 + this.focusables.length) % this.focusables.length
+    const prevFocusItem = this.focusables[this.focusIndex]
+    prevFocusItem.setAttribute("tabindex", "0")
+    prevFocusItem.focus()
+  }
+
+  setFocusToFirst() {
+    if (this.focusables.length === 0) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = 0
+    const firstFocusItem = this.focusables[0]
+    firstFocusItem.setAttribute("tabindex", "0")
+    firstFocusItem.focus()
+  }
+
+  setFocusToLast() {
+    if (this.focusables.length === 0) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = this.focusables.length - 1
+    const lastFocusItem = this.focusables[this.focusIndex]
+    lastFocusItem.setAttribute("tabindex", "0")
+    lastFocusItem.focus()
   }
 }
 
-function renderDropdownItems(items: readonly MenuElement[], view: EditorView, ordered: boolean = false) {
-  let result = document.createDocumentFragment(), updates: ((state: EditorState) => boolean)[] = []
+function renderDropdownItems(
+  items: readonly MenuElement[],
+  view: EditorView,
+  options: {
+    /// When true, renders the items in an `<ol>` element, instead of the default `<ul>` element.
+    ordered?: boolean
+
+    orientation?: "horizontal" | "vertical"
+  } = {}
+) {
+  let result = document.createDocumentFragment(), focusables: HTMLElement[] = [], updates: ((state: EditorState) => boolean)[] = []
   for (let i = 0; i < items.length; i++) {
     let item = items[i]
-    let {dom, update} = item.render(view)
+    let {dom, update, focusable} = item.render(view)
     const checked = item.active ? item.active(view.state) : false
     result.appendChild(
       crel(
@@ -258,27 +351,36 @@ function renderDropdownItems(items: readonly MenuElement[], view: EditorView, or
         dom,
       ),
     )
+    focusables.push(focusable || dom)
     updates.push(update)
   }
 
   function update(state: EditorState) {
     let something = false
     for (let i = 0; i < items.length; i++) {
-      let item = items[i], dom = result.children[i] as HTMLElement, itemUpdate = updates[i]
-      const checked = item.active ? item.active(state) : false
-      if (dom.getAttribute("aria-checked") !== checked.toString()) {
-        dom.setAttribute("aria-checked", checked.toString())
-        something = true
-      }
-      let up = itemUpdate(state)
-      dom.style.display = up ? "" : "none"
+      let item = items[i], dom = result.children[i] as HTMLElement, itemUpdate = updates[i], up = itemUpdate(state)
       if (up) something = true
+      if (dom) {
+        dom.style.display = up ? "" : "none"
+        const checked = item.active ? item.active(state) : false
+        if (dom.getAttribute("aria-checked") !== checked.toString()) {
+          dom.setAttribute("aria-checked", checked.toString())
+          something = true
+        }
+      }
     }
     return something
   }
 
-  const dom = crel(ordered ? "ol" : "ul", { class: `${prefix}-dropdown-items`, role: "menu" }, result)
-  return {dom, update}
+  const dom = crel(
+    options.ordered ? "ol" : "ul",
+    {
+      role: "menu",
+      "aria-orientation": options.orientation || "vertical"
+    },
+    result
+  )
+  return {dom, update, focusables}
 }
 
 function combineUpdates(
@@ -319,7 +421,7 @@ export class DropdownSubmenu implements MenuElement {
 
   /// Renders the submenu.
   render(view: EditorView) {
-    let items = renderDropdownItems(this.content, view, this.options.ordered)
+    let items = renderDropdownItems(this.content, view, this.options)
     let win = view.dom.ownerDocument.defaultView || window
 
     let btn = crel("button", {class: prefix + "-submenu-label"}, translate(view, this.options.label || ""))
