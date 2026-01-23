@@ -67,12 +67,12 @@ export class MenuItem<E extends HTMLElement = HTMLButtonElement> implements Menu
       if (spec.enable) {
         enabled = spec.enable(state) || false
         setClass(dom!, prefix + "-disabled", !enabled)
-        dom!.setAttribute("aria-disabled", (!enabled).toString());
+        dom!.setAttribute("aria-disabled", (!enabled).toString())
       }
       if (spec.active) {
         let active = enabled && spec.active(state) || false
         setClass(dom!, prefix + "-active", active)
-        dom!.setAttribute("aria-pressed", active.toString());
+        dom!.setAttribute("aria-pressed", active.toString())
       }
       return true
     }
@@ -179,7 +179,7 @@ export class Dropdown implements MenuElement {
       css?: string
 
       /// When true, renders the contents of the dropdown in an `<ol>` element, instead of the default `<ul>` element.
-      ordered?: boolean;
+      ordered?: boolean
     } = {}) {
     this.options = options || {}
     this.content = Array.isArray(content) ? content : [content]
@@ -244,9 +244,9 @@ export class Dropdown implements MenuElement {
 function renderDropdownItems(items: readonly MenuElement[], view: EditorView, ordered: boolean = false) {
   let result = document.createDocumentFragment(), updates: ((state: EditorState) => boolean)[] = []
   for (let i = 0; i < items.length; i++) {
-    let item = items[i];
+    let item = items[i]
     let {dom, update} = item.render(view)
-    const checked = item.active ? item.active(view.state) : false;
+    const checked = item.active ? item.active(view.state) : false
     result.appendChild(
       crel(
         "li",
@@ -257,27 +257,27 @@ function renderDropdownItems(items: readonly MenuElement[], view: EditorView, or
         },
         dom,
       ),
-    );
+    )
     updates.push(update)
   }
 
   function update(state: EditorState) {
-    let something = false;
+    let something = false
     for (let i = 0; i < items.length; i++) {
       let item = items[i], dom = result.children[i] as HTMLElement, itemUpdate = updates[i]
-      const checked = item.active ? item.active(state) : false;
+      const checked = item.active ? item.active(state) : false
       if (dom.getAttribute("aria-checked") !== checked.toString()) {
-        dom.setAttribute("aria-checked", checked.toString());
-        something = true;
+        dom.setAttribute("aria-checked", checked.toString())
+        something = true
       }
       let up = itemUpdate(state)
       dom.style.display = up ? "" : "none"
       if (up) something = true
     }
-    return something;
+    return something
   }
 
-  const dom = crel(ordered ? "ol" : "ul", { class: `${prefix}-dropdown-items`, role: "menu" }, result);
+  const dom = crel(ordered ? "ol" : "ul", { class: `${prefix}-dropdown-items`, role: "menu" }, result)
   return {dom, update}
 }
 

@@ -21,11 +21,11 @@ export function menuBar(options: {
 
   /// For accessibility purposes, specify if the menu is displayed
   /// horizontally or vertically. The default is "horizontal".
-  orientation?: "horizontal" | "vertical";
+  orientation?: "horizontal" | "vertical"
 
   /// Determines whether the menu is placed before or after the editor in the DOM.
   /// The default is "before".
-  position?: "before" | "after";
+  position?: "before" | "after"
 
   /// Determines whether the menu floats, i.e. whether it sticks to
   /// the top of the viewport when the editor is partially scrolled
@@ -64,16 +64,15 @@ class MenuBarView {
     if (editorView.dom.parentNode)
       editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom)
     if (options.position === "after") {
-      this.wrapper.insertBefore(editorView.dom, this.wrapper.firstChild);
+      this.wrapper.insertBefore(editorView.dom, this.wrapper.firstChild)
     } else {
-      this.wrapper.appendChild(editorView.dom);
+      this.wrapper.appendChild(editorView.dom)
     }
 
     let {dom, update, focusables} = renderGrouped(this.editorView, this.options.content)
     this.contentUpdate = update
     this.focusables = focusables
     this.menu.appendChild(dom)
-    this.update()
 
     if (options.floating && !isIOS()) {
       this.updateFloat()
@@ -88,84 +87,84 @@ class MenuBarView {
       potentialScrollers.forEach(el => el.addEventListener('scroll', this.scrollHandler!))
     }
 
-
     // set `tabindex` to -1 for all but the first focusable item
     for (let i = 1; i < focusables.length; i++) {
-      const focusable = focusables[i];
-      focusable.setAttribute("tabindex", "-1");
+      focusables[i].setAttribute("tabindex", "-1")
     }
 
     // update focusIndex on focus change
     for (let i = 0; i < focusables.length; i++) {
-      const focusable = focusables[i];
+      const focusable = focusables[i]
       focusable.addEventListener("focus", () => {
-        if (this.focusIndex === i) return;
-        const prevFocusItem = this.focusables[this.focusIndex];
-        prevFocusItem.setAttribute("tabindex", "-1");
-        focusable.setAttribute("tabindex", "0");
-        this.focusIndex = i;
-      });
+        if (this.focusIndex === i) return
+        const prevFocusItem = this.focusables[this.focusIndex]
+        prevFocusItem.setAttribute("tabindex", "-1")
+        focusable.setAttribute("tabindex", "0")
+        this.focusIndex = i
+      })
     }
 
-    const orientation = this.options.orientation || "horizontal";
-    const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight";
-    const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft";
+    const orientation = this.options.orientation || "horizontal"
+    const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
+    const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
 
     this.menu.addEventListener("keydown", (event) => {
       if (event.key === nextFocusKey) {
-        event.preventDefault();
-        this.setFocusToNext();
+        event.preventDefault()
+        this.setFocusToNext()
       } else if (event.key === prevFocusKey) {
-        event.preventDefault();
-        this.setFocusToPrev();
+        event.preventDefault()
+        this.setFocusToPrev()
       } else if (event.key === "Home") {
-        event.preventDefault();
-        this.setFocusToFirst();
+        event.preventDefault()
+        this.setFocusToFirst()
       } else if (event.key === "End") {
-        event.preventDefault();
-        this.setFocusToLast();
+        event.preventDefault()
+        this.setFocusToLast()
       }
-    });
+    })
+
+    this.update()
   }
 
   setFocusToNext() {
-    if (this.focusables.length <= 1) return;
-    const currentFocusItem = this.focusables[this.focusIndex];
-    currentFocusItem.setAttribute("tabindex", "-1");
-    this.focusIndex = (this.focusIndex + 1) % this.focusables.length;
-    const nextFocusItem = this.focusables[this.focusIndex];
-    nextFocusItem.setAttribute("tabindex", "0");
-    nextFocusItem.focus();
+    if (this.focusables.length <= 1) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = (this.focusIndex + 1) % this.focusables.length
+    const nextFocusItem = this.focusables[this.focusIndex]
+    nextFocusItem.setAttribute("tabindex", "0")
+    nextFocusItem.focus()
   }
 
   setFocusToPrev() {
-    if (this.focusables.length <= 1) return;
-    const currentFocusItem = this.focusables[this.focusIndex];
-    currentFocusItem.setAttribute("tabindex", "-1");
-    this.focusIndex = (this.focusIndex - 1 + this.focusables.length) % this.focusables.length;
-    const prevFocusItem = this.focusables[this.focusIndex];
-    prevFocusItem.setAttribute("tabindex", "0");
-    prevFocusItem.focus();
+    if (this.focusables.length <= 1) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = (this.focusIndex - 1 + this.focusables.length) % this.focusables.length
+    const prevFocusItem = this.focusables[this.focusIndex]
+    prevFocusItem.setAttribute("tabindex", "0")
+    prevFocusItem.focus()
   }
 
   setFocusToFirst() {
-    if (this.focusables.length === 0) return;
-    const currentFocusItem = this.focusables[this.focusIndex];
-    currentFocusItem.setAttribute("tabindex", "-1");
-    this.focusIndex = 0;
-    const firstFocusItem = this.focusables[0];
-    firstFocusItem.setAttribute("tabindex", "0");
-    firstFocusItem.focus();
+    if (this.focusables.length === 0) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = 0
+    const firstFocusItem = this.focusables[0]
+    firstFocusItem.setAttribute("tabindex", "0")
+    firstFocusItem.focus()
   }
 
   setFocusToLast() {
-    if (this.focusables.length === 0) return;
-    const currentFocusItem = this.focusables[this.focusIndex];
-    currentFocusItem.setAttribute("tabindex", "-1");
-    this.focusIndex = this.focusables.length - 1;
-    const lastFocusItem = this.focusables[this.focusIndex];
-    lastFocusItem.setAttribute("tabindex", "0");
-    lastFocusItem.focus();
+    if (this.focusables.length === 0) return
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    this.focusIndex = this.focusables.length - 1
+    const lastFocusItem = this.focusables[this.focusIndex]
+    lastFocusItem.setAttribute("tabindex", "0")
+    lastFocusItem.focus()
   }
 
   update() {
