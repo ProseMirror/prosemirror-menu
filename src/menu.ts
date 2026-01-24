@@ -271,6 +271,7 @@ export class Dropdown implements MenuElement {
           } else if (event.key === "Escape") {
             event.preventDefault()
             close()
+            btn.focus()
           }
         })
       }
