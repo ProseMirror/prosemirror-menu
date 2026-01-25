@@ -419,6 +419,10 @@ function combineUpdates(
 export class DropdownSubmenu implements MenuElement {
   /// @internal
   content: readonly MenuElement[]
+  /// @internal
+  focusables: HTMLElement[] = []
+  /// @internal
+  focusIndex = 0
 
   /// Creates a submenu for the given group of menu elements. The
   /// following options are recognized:
@@ -430,6 +434,9 @@ export class DropdownSubmenu implements MenuElement {
       label?: string
       /// When true, renders the contents of the submenu in an `<ol>` element, instead of the default `<ul>` element.
       ordered?: boolean
+      /// For accessibility purposes, specify if the menu is displayed
+      /// horizontally or vertically. The default is "vertical".
+      orientation?: "horizontal" | "vertical"
     } = {}
   ) {
     this.content = Array.isArray(content) ? content : [content]
@@ -438,16 +445,26 @@ export class DropdownSubmenu implements MenuElement {
   /// Renders the submenu.
   render(view: EditorView) {
     let items = renderDropdownItems(this.content, view, this.options)
+    this.focusables = items.focusables
     let win = view.dom.ownerDocument.defaultView || window
 
     let btn = crel("button", {class: prefix + "-submenu-label"}, translate(view, this.options.label || ""))
     let wrap = crel("div", {class: prefix + "-submenu-wrap"}, btn,
                    crel("div", {class: prefix + "-submenu"}, items.dom))
     let listeningOnClose: (() => void) | null = null
-    btn.addEventListener("click", e => {
+
+    const orientation = this.options.orientation || "vertical"
+    const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
+    const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
+    const enterSubmenuKey = orientation === "vertical" ? "ArrowRight" : "ArrowDown"
+    const exitSubmenuKey = orientation === "vertical" ? "ArrowLeft" : "ArrowUp"
+
+    function openSubmenu(e: Event) {
       e.preventDefault()
+      e.stopPropagation()
       markMenuEvent(e)
-      setClass(wrap, prefix + "-submenu-wrap-active", false)
+      setClass(wrap, prefix + "-submenu-wrap-active", true)
+      items.focusables[0].focus()
       if (!listeningOnClose)
         win.addEventListener("click", listeningOnClose = () => {
           if (!isMenuEvent(wrap)) {
@@ -456,6 +473,51 @@ export class DropdownSubmenu implements MenuElement {
             listeningOnClose = null
           }
         })
+    }
+
+    btn.addEventListener("click", openSubmenu)
+    btn.addEventListener("keydown", e => {
+      if (e.key === enterSubmenuKey) {
+        openSubmenu(e)
+      }
+    })
+
+    items.dom.addEventListener("keydown", (event) => {
+      markMenuEvent(event)
+      if (event.key === nextFocusKey) {
+        const nextIndex = this.makeContentIndexMover(this.focusIndex, 1)(view.state)
+        if (typeof nextIndex === "number") {
+          event.preventDefault()
+          event.stopPropagation()
+          this.setFocusToIndex(nextIndex)
+        }
+      } else if (event.key === prevFocusKey) {
+        const prevIndex = this.makeContentIndexMover(this.focusIndex, -1)(view.state)
+        if (typeof prevIndex === "number") {
+          event.preventDefault()
+          event.stopPropagation()
+          this.setFocusToIndex(prevIndex)
+        }
+      } else if (event.key === "Home") {
+        const startIndex = this.makeContentIndexMover(-1, 1)(view.state)
+        if (typeof startIndex === "number") {
+          event.preventDefault()
+          event.stopPropagation()
+          this.setFocusToIndex(startIndex)
+        }
+      } else if (event.key === "End") {
+        const endIndex = this.makeContentIndexMover(this.focusables.length, -1)(view.state)
+        if (typeof endIndex === "number") {
+          event.preventDefault()
+          event.stopPropagation()
+          this.setFocusToIndex(endIndex)
+        }
+      } else if (event.key === "Escape" || event.key === exitSubmenuKey) {
+        event.preventDefault()
+        event.stopPropagation()
+        setClass(wrap, prefix + "-submenu-wrap-active", false)
+        btn.focus()
+      }
     })
 
     function update(state: EditorState) {
@@ -464,6 +526,39 @@ export class DropdownSubmenu implements MenuElement {
       return inner
     }
     return {dom: wrap, update, focusable: btn}
+  }
+
+  setFocusToIndex(index: number) {
+    if (this.focusables.length <= 1) return
+    if (index < 0 || index >= this.focusables.length)
+      throw new RangeError(`Dropdown focus index must be between 0 and ${this.focusables.length-1}, got ${index}`)
+    const currentFocusItem = this.focusables[this.focusIndex]
+    currentFocusItem.setAttribute("tabindex", "-1")
+    const nextFocusItem = this.focusables[index]
+    nextFocusItem.setAttribute("tabindex", "0")
+    this.focusIndex = index
+    nextFocusItem.focus()
+  }
+
+  // Returns a function that moves an index through the `this.content` array,
+  // skipping deselected items.
+  makeContentIndexMover(startIndex: number, delta: 1 | -1 = 1) {
+    const content = this.content, length = content.length
+    return function (state: EditorState): number | null {
+      let nextIndex = (startIndex + delta + length) % length
+      const firstTestedIndex = nextIndex
+      let spec = content[nextIndex]
+      let selected = spec.selected ? spec.selected(state) : true
+      while (!selected) {
+        nextIndex = (nextIndex + delta + length) % length
+        // If we have looped all the way around to the first tested index,
+        // we're not going to get a result (all content is deselected).
+        if (nextIndex === firstTestedIndex) return null
+        spec = content[nextIndex]
+        selected = spec.selected ? spec.selected(state) : true
+      }
+      return nextIndex;
+    }
   }
 }
 

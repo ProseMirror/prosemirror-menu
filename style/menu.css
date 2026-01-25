@@ -106,7 +106,9 @@
   opacity: .3;
 }
 
-.ProseMirror-menu-submenu-wrap:hover .ProseMirror-menu-submenu, .ProseMirror-menu-submenu-wrap-active .ProseMirror-menu-submenu {
+.ProseMirror-menu-submenu-wrap:hover .ProseMirror-menu-submenu,
+.ProseMirror-menu-submenu:focus-within,
+.ProseMirror-menu-submenu-wrap-active .ProseMirror-menu-submenu {
   display: block;
 }
 
