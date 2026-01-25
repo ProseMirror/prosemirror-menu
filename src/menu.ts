@@ -59,6 +59,10 @@ export class MenuItem<E extends HTMLElement = HTMLButtonElement> implements Menu
       e.preventDefault()
       if (!dom!.classList.contains(prefix + "-disabled"))
         spec.run(view.state, view.dispatch, view, e)
+      // mouse users want the focus restored to the editor
+      let clicks = (e as MouseEvent).detail
+      if (typeof clicks === "number" && clicks > 0)
+        setTimeout(() => view.dom.focus(), 0)
     })
 
     function update(state: EditorState) {
@@ -275,6 +279,10 @@ export class Dropdown implements MenuElement {
           }
         })
       }
+      // mouse users want the focus restored to the editor
+      let clicks = e.detail
+      if (typeof clicks === "number" && clicks > 0)
+        setTimeout(() => view.dom.focus(), 0)
     })
 
     function update(state: EditorState) {
@@ -473,6 +481,11 @@ export class DropdownSubmenu implements MenuElement {
             listeningOnClose = null
           }
         })
+
+      // mouse users want the focus restored to the editor
+      let clicks = (e as MouseEvent).detail
+      if (typeof clicks === "number" && clicks > 0)
+        setTimeout(() => view.dom.focus(), 0)
     }
 
     btn.addEventListener("click", openSubmenu)
