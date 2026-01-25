@@ -18,17 +18,24 @@
   display: inline-block;
 }
 
+.ProseMirror-menuitem button {
+  border: none;
+  background-image: none;
+  background-color: transparent;
+  box-shadow: none;
+}
+
 .ProseMirror-menuseparator {
   border-right: 1px solid #ddd;
   margin-right: 3px;
 }
 
-.ProseMirror-menu-dropdown, .ProseMirror-menu-dropdown-menu {
+.ProseMirror-menuitem .ProseMirror-menu-dropdown, .ProseMirror-menu-dropdown-menu {
   font-size: 90%;
   white-space: nowrap;
 }
 
-.ProseMirror-menu-dropdown {
+.ProseMirror-menuitem .ProseMirror-menu-dropdown {
   vertical-align: 1px;
   cursor: pointer;
   position: relative;
@@ -60,17 +67,27 @@
   padding: 2px;
 }
 
+.ProseMirror-menu-dropdown-menu ul,
+.ProseMirror-menu-dropdown-menu ol,
+.ProseMirror-menu-submenu ul,
+.ProseMirror-menu-submenu ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
 .ProseMirror-menu-dropdown-menu {
   z-index: 15;
   min-width: 6em;
 }
 
-.ProseMirror-menu-dropdown-item {
+.ProseMirror-menu-dropdown-item button {
   cursor: pointer;
   padding: 2px 8px 2px 4px;
 }
 
-.ProseMirror-menu-dropdown-item:hover {
+.ProseMirror-menu-dropdown-item:hover,
+.ProseMirror-menu-dropdown-item:focus-within {
   background: #f2f2f2;
 }
 
@@ -97,12 +114,12 @@
   top: -3px;
 }
 
-.ProseMirror-menu-active {
+.ProseMirror-menuitem .ProseMirror-menu-active {
   background: #eee;
   border-radius: 4px;
 }
 
-.ProseMirror-menu-disabled {
+.ProseMirror-menuitem .ProseMirror-menu-disabled {
   opacity: .3;
 }
 
