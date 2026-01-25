@@ -613,7 +613,7 @@ export function renderGrouped(view: EditorView, content: readonly (readonly Menu
 }
 
 function separator() {
-  return crel("span", {class: prefix + "separator"})
+  return crel("span", {class: prefix + "separator", role: "separator"})
 }
 
 /// A set of basic editor-related icons. Contains the properties
