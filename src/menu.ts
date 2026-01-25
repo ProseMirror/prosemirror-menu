@@ -398,12 +398,10 @@ function renderDropdownItems(
 
   const dom = crel(
     options.ordered ? "ol" : "ul",
-    {
-      role: "menu",
-      "aria-orientation": options.orientation || "vertical"
-    },
+    { role: "menu" },
     result
   )
+  if (options.orientation) dom.ariaOrientation = options.orientation
   return {dom, update, focusables}
 }
 
