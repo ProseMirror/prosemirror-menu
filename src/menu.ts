@@ -239,6 +239,9 @@ export class Dropdown implements MenuElement {
           if (!isMenuEvent(wrap)) close()
         })
 
+        // If triggered using the keyboard, move focus to first item
+        if (e.detail === 0) this.focusables[0].focus()
+
         const orientation = this.options.orientation || "vertical"
         const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
         const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
@@ -305,7 +308,6 @@ export class Dropdown implements MenuElement {
     dom.appendChild(menuDOM)
     trigger.ariaControlsElements = [items]
     trigger.setAttribute("aria-expanded", "true")
-    this.focusables[0].focus()
     return {close, node: menuDOM}
   }
 
@@ -464,7 +466,6 @@ export class DropdownSubmenu implements MenuElement {
       e.stopPropagation()
       markMenuEvent(e)
       setClass(wrap, prefix + "-submenu-wrap-active", true)
-      items.focusables[0].focus()
       if (!listeningOnClose)
         win.addEventListener("click", listeningOnClose = () => {
           if (!isMenuEvent(wrap)) {
@@ -479,6 +480,7 @@ export class DropdownSubmenu implements MenuElement {
     btn.addEventListener("keydown", e => {
       if (e.key === enterSubmenuKey) {
         openSubmenu(e)
+        items.focusables[0].focus()
       }
     })
     // Clicking on an item should not remove focus from the editor
