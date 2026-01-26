@@ -56,14 +56,11 @@ export class MenuItem<E extends HTMLElement = HTMLButtonElement> implements Menu
     if (spec.css) dom.style.cssText += spec.css
 
     dom.addEventListener("click", e => {
-      e.preventDefault()
       if (!dom!.classList.contains(prefix + "-disabled"))
         spec.run(view.state, view.dispatch, view, e)
-      // mouse users want the focus restored to the editor
-      let clicks = (e as MouseEvent).detail
-      if (typeof clicks === "number" && clicks > 0)
-        setTimeout(() => view.dom.focus(), 0)
     })
+    // Clicking on a menu item should not remove focus from the editor
+    dom.addEventListener("mousedown", e => e.preventDefault())
 
     function update(state: EditorState) {
       if (spec.select) {
@@ -233,7 +230,6 @@ export class Dropdown implements MenuElement {
       }
     }
     btn.addEventListener("click", e => {
-      e.preventDefault()
       markMenuEvent(e)
       if (open) {
         close()
@@ -279,11 +275,9 @@ export class Dropdown implements MenuElement {
           }
         })
       }
-      // mouse users want the focus restored to the editor
-      let clicks = e.detail
-      if (typeof clicks === "number" && clicks > 0)
-        setTimeout(() => view.dom.focus(), 0)
     })
+    // Clicking on a dropdown should not remove focus from the editor
+    btn.addEventListener("mousedown", e => e.preventDefault())
 
     function update(state: EditorState) {
       let inner = content.update(state)
@@ -479,11 +473,6 @@ export class DropdownSubmenu implements MenuElement {
             listeningOnClose = null
           }
         })
-
-      // mouse users want the focus restored to the editor
-      let clicks = (e as MouseEvent).detail
-      if (typeof clicks === "number" && clicks > 0)
-        setTimeout(() => view.dom.focus(), 0)
     }
 
     btn.addEventListener("click", openSubmenu)
@@ -492,6 +481,8 @@ export class DropdownSubmenu implements MenuElement {
         openSubmenu(e)
       }
     })
+    // Clicking on an item should not remove focus from the editor
+    btn.addEventListener("mousedown", e => e.preventDefault())
 
     items.dom.addEventListener("keydown", (event) => {
       markMenuEvent(event)
