@@ -2,7 +2,7 @@ import crel from "crelt"
 import {Plugin, EditorState} from "prosemirror-state"
 import {EditorView} from "prosemirror-view"
 
-import {renderGrouped, MenuElement} from "./menu"
+import {renderGrouped, MenuElement, keyboardMoveFocus, findFocusableIndex} from "./menu"
 
 const prefix = "ProseMirror-menubar"
 
@@ -12,22 +12,12 @@ function isIOS() {
   return !/Edge\/\d/.test(agent) && /AppleWebKit/.test(agent) && /Mobile\/\w+/.test(agent)
 }
 
-function flatten<T>(arr: readonly(readonly T[])[]): readonly T[] {
-  return arr.reduce(function (flat, item) {
-    return flat.concat(item)
-  }, [])
-}
-
 /// A plugin that will place a menu bar above the editor. Note that
 /// this involves wrapping the editor in an additional `<div>`.
 export function menuBar(options: {
   /// Provides the content of the menu, as a nested array to be
   /// passed to `renderGrouped`.
   content: readonly (readonly MenuElement[])[]
-
-  /// For accessibility purposes, specify if the menu is displayed
-  /// horizontally or vertically. The default is "horizontal".
-  orientation?: "horizontal" | "vertical"
 
   /// Determines whether the menu is placed before or after the editor in the DOM.
   /// The default is "before".
@@ -65,7 +55,6 @@ class MenuBarView {
     this.menu = this.wrapper.appendChild(crel("div", {class: prefix, role: "toolbar"}))
     this.menu.className = prefix
     this.menu.ariaControlsElements = [editorView.dom]
-    if (options.orientation) this.menu.ariaOrientation = options.orientation
 
     if (editorView.dom.parentNode)
       editorView.dom.parentNode.replaceChild(this.wrapper, editorView.dom)
@@ -93,89 +82,34 @@ class MenuBarView {
       potentialScrollers.forEach(el => el.addEventListener('scroll', this.scrollHandler!))
     }
 
-    // set `tabindex` to -1 for all but the first focusable item
-    for (let i = 1; i < focusables.length; i++) {
-      focusables[i].setAttribute("tabindex", "-1")
-    }
-
     // update focusIndex on focus change
     for (let i = 0; i < focusables.length; i++) {
-      const focusable = focusables[i]
+      let focusable = focusables[i]
+      // set `tabindex` to -1 for all but the first focusable item
+      if (i) focusable.setAttribute("tabindex", "-1")
       focusable.addEventListener("focus", () => {
         if (this.focusIndex === i) return
-        const prevFocusItem = this.focusables[this.focusIndex]
+        let prevFocusItem = this.focusables[this.focusIndex]
         prevFocusItem.setAttribute("tabindex", "-1")
         focusable.setAttribute("tabindex", "0")
         this.focusIndex = i
       })
     }
 
-    const orientation = this.options.orientation || "horizontal"
-    const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
-    const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
-
     this.menu.addEventListener("keydown", (event) => {
-      if (event.key === nextFocusKey) {
-        const nextIndex = this.makeContentIndexMover(this.focusIndex, 1)(editorView.state)
-        if (typeof nextIndex === "number") {
-          event.preventDefault()
-          this.setFocusToIndex(nextIndex)
-        }
-      } else if (event.key === prevFocusKey) {
-        const prevIndex = this.makeContentIndexMover(this.focusIndex, -1)(editorView.state)
-        if (typeof prevIndex === "number") {
-          event.preventDefault()
-          this.setFocusToIndex(prevIndex)
-        }
-      } else if (event.key === "Home") {
-        const startIndex = this.makeContentIndexMover(-1, 1)(editorView.state)
-        if (typeof startIndex === "number") {
-          event.preventDefault()
-          this.setFocusToIndex(startIndex)
-        }
-      } else if (event.key === "End") {
-        const endIndex = this.makeContentIndexMover(this.focusables.length, -1)(editorView.state)
-        if (typeof endIndex === "number") {
-          event.preventDefault()
-          this.setFocusToIndex(endIndex)
-        }
-      }
+      keyboardMoveFocus(this, event, "horizontal")
     })
 
     this.update()
   }
 
-  setFocusToIndex(index: number) {
-    if (this.focusables.length <= 1) return
-    if (index < 0 || index >= this.focusables.length)
-      throw new RangeError(`MenuBar focus index must be between 0 and ${this.focusables.length-1}, got ${index}`)
-    const currentFocusItem = this.focusables[this.focusIndex]
-    currentFocusItem.setAttribute("tabindex", "-1")
-    const nextFocusItem = this.focusables[index]
-    nextFocusItem.setAttribute("tabindex", "0")
+  setFocusIndex(index: number) {
+    if (this.focusables.length <= 1 || this.focusIndex == index) return
+    this.focusables[this.focusIndex].setAttribute("tabindex", "-1")
     this.focusIndex = index
+    let nextFocusItem = this.focusables[index]
+    nextFocusItem.setAttribute("tabindex", "0")
     nextFocusItem.focus()
-  }
-
-  // Returns a function that moves an index through the flattened `this.options.content` array,
-  // skipping deselected items.
-  makeContentIndexMover(startIndex: number, delta: 1 | -1 = 1) {
-    const content = flatten(this.options.content), length = content.length
-    return function (state: EditorState): number | null {
-      let nextIndex = (startIndex + delta + length) % length
-      const firstTestedIndex = nextIndex
-      let spec = content[nextIndex]
-      let selected = spec.selected ? spec.selected(state) : true
-      while (!selected) {
-        nextIndex = (nextIndex + delta + length) % length
-        // If we have looped all the way around to the first tested index,
-        // we're not going to get a result (all content is deselected).
-        if (nextIndex === firstTestedIndex) return null
-        spec = content[nextIndex]
-        selected = spec.selected ? spec.selected(state) : true
-      }
-      return nextIndex;
-    }
   }
 
   update() {
@@ -185,7 +119,12 @@ class MenuBarView {
       this.menu.replaceChild(dom, this.menu.firstChild!)
       this.root = this.editorView.root
     }
+    let active = this.editorView.dom.ownerDocument.activeElement == this.focusables[this.focusIndex]
     this.contentUpdate(this.editorView.state)
+    if (active && this.focusables[this.focusIndex].style.display == "none") {
+      let next = findFocusableIndex(this.focusables, this.focusIndex, 1)
+      if (next != null) this.setFocusIndex(next)
+    }
 
     if (this.floating) {
       this.updateScrollCursor()

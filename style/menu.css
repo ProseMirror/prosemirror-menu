@@ -20,9 +20,11 @@
 
 .ProseMirror-menuitem button {
   border: none;
-  background-image: none;
-  background-color: transparent;
+  background: transparent;
   box-shadow: none;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
 }
 
 .ProseMirror-menuseparator {

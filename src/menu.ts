@@ -18,14 +18,6 @@ export interface MenuElement {
   /// DOM node, which is the node that should receive focus when this
   /// element is focused. If not provided, the `dom` element will be used.
   render(pm: EditorView): {dom: HTMLElement, update: (state: EditorState) => boolean, focusable?: HTMLElement}
-
-  /// An optional predicate function to determine whether the element is 'active',
-  /// used for accessibility purposes.
-  active?: (state: EditorState) => boolean
-
-  /// An optional predicate function to determine whether the element is 'selected',
-  /// used for accessibility purposes.
-  selected?: (state: EditorState) => boolean
 }
 
 const prefix = "ProseMirror-menu"
@@ -49,7 +41,7 @@ export class MenuItem<E extends HTMLElement = HTMLButtonElement> implements Menu
         : null
     if (!dom) throw new RangeError("MenuItem without icon or label property")
     if (spec.title) {
-      const title = (typeof spec.title === "function" ? spec.title(view.state) : spec.title)
+      let title = (typeof spec.title === "function" ? spec.title(view.state) : spec.title)
       ;(dom as HTMLElement).setAttribute("title", translate(view, title))
     }
     if (spec.class) dom.classList.add(spec.class)
@@ -83,18 +75,6 @@ export class MenuItem<E extends HTMLElement = HTMLButtonElement> implements Menu
     }
 
     return {dom, update}
-  }
-
-  selected(state: EditorState) {
-    const spec = this.spec
-    if (spec.select) return spec.select(state)
-    return true
-  }
-
-  active(state: EditorState) {
-    const spec = this.spec
-    if (spec.active) return spec.active(state)
-    return false
   }
 }
 
@@ -192,13 +172,6 @@ export class Dropdown implements MenuElement {
 
       /// When given, adds an extra set of CSS styles to the menu control.
       css?: string
-
-      /// When true, renders the contents of the dropdown in an `<ol>` element, instead of the default `<ul>` element.
-      ordered?: boolean
-
-      /// For accessibility purposes, specify if the menu is displayed
-      /// horizontally or vertically. The default is "vertical".
-      orientation?: "horizontal" | "vertical"
     } = {}) {
     this.options = options || {}
     this.content = Array.isArray(content) ? content : [content]
@@ -206,7 +179,7 @@ export class Dropdown implements MenuElement {
 
   /// Render the dropdown menu and sub-items.
   render(view: EditorView) {
-    let content = renderDropdownItems(this.content, view, this.options)
+    let content = renderDropdownItems(this.content, view)
     this.focusables = content.focusables
     let win = view.dom.ownerDocument.defaultView || window
 
@@ -242,37 +215,12 @@ export class Dropdown implements MenuElement {
         // If triggered using the keyboard, move focus to first item
         if (e.detail === 0) this.focusables[0].focus()
 
-        const orientation = this.options.orientation || "vertical"
-        const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
-        const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
         open.node.addEventListener("keydown", (event) => {
           markMenuEvent(event)
-          if (event.key === nextFocusKey) {
-            const nextIndex = this.makeContentIndexMover(this.focusIndex, 1)(view.state)
-            if (typeof nextIndex === "number") {
-              event.preventDefault()
-              this.setFocusToIndex(nextIndex)
-            }
-          } else if (event.key === prevFocusKey) {
-            const prevIndex = this.makeContentIndexMover(this.focusIndex, -1)(view.state)
-            if (typeof prevIndex === "number") {
-              event.preventDefault()
-              this.setFocusToIndex(prevIndex)
-            }
-          } else if (event.key === "Home") {
-            const startIndex = this.makeContentIndexMover(-1, 1)(view.state)
-            if (typeof startIndex === "number") {
-              event.preventDefault()
-              this.setFocusToIndex(startIndex)
-            }
-          } else if (event.key === "End") {
-            const endIndex = this.makeContentIndexMover(this.focusables.length, -1)(view.state)
-            if (typeof endIndex === "number") {
-              event.preventDefault()
-              this.setFocusToIndex(endIndex)
-            }
+          if (keyboardMoveFocus(this, event, "vertical")) {
           } else if (event.key === "Escape") {
             event.preventDefault()
+            event.stopPropagation()
             close()
             btn.focus()
           }
@@ -311,94 +259,73 @@ export class Dropdown implements MenuElement {
     return {close, node: menuDOM}
   }
 
-  setFocusToIndex(index: number) {
-    if (this.focusables.length <= 1) return
-    if (index < 0 || index >= this.focusables.length)
-      throw new RangeError(`Dropdown focus index must be between 0 and ${this.focusables.length-1}, got ${index}`)
-    const currentFocusItem = this.focusables[this.focusIndex]
-    currentFocusItem.setAttribute("tabindex", "-1")
-    const nextFocusItem = this.focusables[index]
-    nextFocusItem.setAttribute("tabindex", "0")
+  setFocusIndex(index: number) {
+    if (this.focusables.length <= 1 || index == this.focusIndex) return
+    this.focusables[this.focusIndex].setAttribute("tabindex", "-1")
     this.focusIndex = index
+    let nextFocusItem = this.focusables[index]
+    nextFocusItem.setAttribute("tabindex", "0")
     nextFocusItem.focus()
-  }
-
-  // Returns a function that moves an index through the `this.content` array,
-  // skipping deselected items.
-  makeContentIndexMover(startIndex: number, delta: 1 | -1 = 1) {
-    const content = this.content, length = content.length
-    return function (state: EditorState): number | null {
-      let nextIndex = (startIndex + delta + length) % length
-      const firstTestedIndex = nextIndex
-      let spec = content[nextIndex]
-      let selected = spec.selected ? spec.selected(state) : true
-      while (!selected) {
-        nextIndex = (nextIndex + delta + length) % length
-        // If we have looped all the way around to the first tested index,
-        // we're not going to get a result (all content is deselected).
-        if (nextIndex === firstTestedIndex) return null
-        spec = content[nextIndex]
-        selected = spec.selected ? spec.selected(state) : true
-      }
-      return nextIndex;
-    }
   }
 }
 
-function renderDropdownItems(
-  items: readonly MenuElement[],
-  view: EditorView,
-  options: {
-    /// When true, renders the items in an `<ol>` element, instead of the default `<ul>` element.
-    ordered?: boolean
+export function findFocusableIndex(focusables: readonly HTMLElement[], startIndex: number, delta: 1 | -1) {
+  let length = focusables.length
+  for (let i = 0, index = startIndex + delta;; index += delta, i++) {
+    let normIndex = (index + length) % length
+    if (focusables[normIndex].style.display != "none") return normIndex
+    if (i == length) return null
+  }
+}
 
-    orientation?: "horizontal" | "vertical"
-  } = {}
+export function keyboardMoveFocus(
+  control: {focusables: readonly HTMLElement[], focusIndex: number, setFocusIndex: (i: number) => void},
+  event: KeyboardEvent,
+  orientation: "vertical" | "horizontal"
 ) {
-  let result = document.createDocumentFragment(), focusables: HTMLElement[] = [], updates: ((state: EditorState) => boolean)[] = []
+  let {focusables, focusIndex} = control
+  let move =
+    event.key == (orientation == "vertical" ? "ArrowDown" : "ArrowRight") ? findFocusableIndex(focusables, focusIndex, 1) :
+    event.key == (orientation == "vertical" ? "ArrowUp" : "ArrowLeft") ? findFocusableIndex(focusables, focusIndex, -1) :
+    event.key == "Home" ? findFocusableIndex(focusables, -1, 1) :
+    event.key == "End" ? findFocusableIndex(focusables, focusables.length, -1) : null
+  if (move == null) return false
+  event.preventDefault()
+  event.stopPropagation()
+  control.setFocusIndex(move)
+  return true
+}
+
+function renderDropdownItems(items: readonly MenuElement[], view: EditorView) {
+  let elts: HTMLElement[] = [], focusables: HTMLElement[] = [], updates: ((state: EditorState) => boolean)[] = []
   for (let i = 0; i < items.length; i++) {
     let item = items[i]
     let {dom, update, focusable} = item.render(view)
-    const checked = item.active ? item.active(view.state) : false
-    result.appendChild(
-      crel(
-        "li",
-        {
-          class: `${prefix}-dropdown-item`,
-          role: "menuitemradio",
-          "aria-checked": checked.toString(),
-        },
-        dom,
-      ),
-    )
+    elts.push(crel("li", {
+      class: `${prefix}-dropdown-item`,
+      role: "menuitemradio",
+      "aria-checked": dom.classList.contains(prefix + "-active").toString(),
+    }, dom))
     focusables.push(focusable || dom)
     updates.push(update)
   }
 
   function update(state: EditorState) {
     let something = false
-    for (let i = 0; i < items.length; i++) {
-      let item = items[i], dom = result.children[i] as HTMLElement, itemUpdate = updates[i], up = itemUpdate(state)
+    for (let i = 0; i < elts.length; i++) {
+      let dom = elts[i], up = updates[i](state)
       if (up) something = true
-      if (dom) {
-        dom.style.display = up ? "" : "none"
-        const checked = item.active ? item.active(state) : false
-        if (dom.getAttribute("aria-checked") !== checked.toString()) {
-          dom.setAttribute("aria-checked", checked.toString())
-          something = true
-        }
+      dom.style.display = up ? "" : "none"
+      let checked = dom.classList.contains(prefix + "-active")
+      if (dom.getAttribute("aria-checked") !== checked.toString()) {
+        dom.setAttribute("aria-checked", checked.toString())
+        something = true
       }
     }
     return something
   }
 
-  const dom = crel(
-    options.ordered ? "ol" : "ul",
-    { role: "menu" },
-    result
-  )
-  if (options.orientation) dom.ariaOrientation = options.orientation
-  return {dom, update, focusables}
+  return {dom: crel("ul", {role: "menu"}, elts), update, focusables}
 }
 
 function combineUpdates(
@@ -434,11 +361,6 @@ export class DropdownSubmenu implements MenuElement {
     readonly options: {
       /// The label to show on the submenu.
       label?: string
-      /// When true, renders the contents of the submenu in an `<ol>` element, instead of the default `<ul>` element.
-      ordered?: boolean
-      /// For accessibility purposes, specify if the menu is displayed
-      /// horizontally or vertically. The default is "vertical".
-      orientation?: "horizontal" | "vertical"
     } = {}
   ) {
     this.content = Array.isArray(content) ? content : [content]
@@ -446,7 +368,7 @@ export class DropdownSubmenu implements MenuElement {
 
   /// Renders the submenu.
   render(view: EditorView) {
-    let items = renderDropdownItems(this.content, view, this.options)
+    let items = renderDropdownItems(this.content, view)
     this.focusables = items.focusables
     let win = view.dom.ownerDocument.defaultView || window
 
@@ -454,12 +376,6 @@ export class DropdownSubmenu implements MenuElement {
     let wrap = crel("div", {class: prefix + "-submenu-wrap"}, btn,
                    crel("div", {class: prefix + "-submenu"}, items.dom))
     let listeningOnClose: (() => void) | null = null
-
-    const orientation = this.options.orientation || "vertical"
-    const nextFocusKey = orientation === "vertical" ? "ArrowDown" : "ArrowRight"
-    const prevFocusKey = orientation === "vertical" ? "ArrowUp" : "ArrowLeft"
-    const enterSubmenuKey = orientation === "vertical" ? "ArrowRight" : "ArrowDown"
-    const exitSubmenuKey = orientation === "vertical" ? "ArrowLeft" : "ArrowUp"
 
     function openSubmenu(e: Event) {
       e.preventDefault()
@@ -478,7 +394,7 @@ export class DropdownSubmenu implements MenuElement {
 
     btn.addEventListener("click", openSubmenu)
     btn.addEventListener("keydown", e => {
-      if (e.key === enterSubmenuKey) {
+      if (e.key === "ArrowRight") {
         openSubmenu(e)
         items.focusables[0].focus()
       }
@@ -488,35 +404,8 @@ export class DropdownSubmenu implements MenuElement {
 
     items.dom.addEventListener("keydown", (event) => {
       markMenuEvent(event)
-      if (event.key === nextFocusKey) {
-        const nextIndex = this.makeContentIndexMover(this.focusIndex, 1)(view.state)
-        if (typeof nextIndex === "number") {
-          event.preventDefault()
-          event.stopPropagation()
-          this.setFocusToIndex(nextIndex)
-        }
-      } else if (event.key === prevFocusKey) {
-        const prevIndex = this.makeContentIndexMover(this.focusIndex, -1)(view.state)
-        if (typeof prevIndex === "number") {
-          event.preventDefault()
-          event.stopPropagation()
-          this.setFocusToIndex(prevIndex)
-        }
-      } else if (event.key === "Home") {
-        const startIndex = this.makeContentIndexMover(-1, 1)(view.state)
-        if (typeof startIndex === "number") {
-          event.preventDefault()
-          event.stopPropagation()
-          this.setFocusToIndex(startIndex)
-        }
-      } else if (event.key === "End") {
-        const endIndex = this.makeContentIndexMover(this.focusables.length, -1)(view.state)
-        if (typeof endIndex === "number") {
-          event.preventDefault()
-          event.stopPropagation()
-          this.setFocusToIndex(endIndex)
-        }
-      } else if (event.key === "Escape" || event.key === exitSubmenuKey) {
+      if (keyboardMoveFocus(this, event, "vertical")) {
+      } else if (event.key === "Escape" || event.key === "ArrowLeft") {
         event.preventDefault()
         event.stopPropagation()
         setClass(wrap, prefix + "-submenu-wrap-active", false)
@@ -532,37 +421,13 @@ export class DropdownSubmenu implements MenuElement {
     return {dom: wrap, update, focusable: btn}
   }
 
-  setFocusToIndex(index: number) {
-    if (this.focusables.length <= 1) return
-    if (index < 0 || index >= this.focusables.length)
-      throw new RangeError(`Dropdown focus index must be between 0 and ${this.focusables.length-1}, got ${index}`)
-    const currentFocusItem = this.focusables[this.focusIndex]
-    currentFocusItem.setAttribute("tabindex", "-1")
-    const nextFocusItem = this.focusables[index]
-    nextFocusItem.setAttribute("tabindex", "0")
+  setFocusIndex(index: number) {
+    if (this.focusables.length <= 1 || index == this.focusIndex) return
+    this.focusables[this.focusIndex].setAttribute("tabindex", "-1")
     this.focusIndex = index
+    let nextFocusItem = this.focusables[index]
+    nextFocusItem.setAttribute("tabindex", "0")
     nextFocusItem.focus()
-  }
-
-  // Returns a function that moves an index through the `this.content` array,
-  // skipping deselected items.
-  makeContentIndexMover(startIndex: number, delta: 1 | -1 = 1) {
-    const content = this.content, length = content.length
-    return function (state: EditorState): number | null {
-      let nextIndex = (startIndex + delta + length) % length
-      const firstTestedIndex = nextIndex
-      let spec = content[nextIndex]
-      let selected = spec.selected ? spec.selected(state) : true
-      while (!selected) {
-        nextIndex = (nextIndex + delta + length) % length
-        // If we have looped all the way around to the first tested index,
-        // we're not going to get a result (all content is deselected).
-        if (nextIndex === firstTestedIndex) return null
-        spec = content[nextIndex]
-        selected = spec.selected ? spec.selected(state) : true
-      }
-      return nextIndex;
-    }
   }
 }
 
