@@ -104,7 +104,7 @@ class MenuBarView {
   }
 
   setFocusIndex(index: number) {
-    if (this.focusables.length <= 1 || this.focusIndex == index) return
+    if (this.focusables.length <= 1) return
     this.focusables[this.focusIndex].setAttribute("tabindex", "-1")
     this.focusIndex = index
     let nextFocusItem = this.focusables[index]

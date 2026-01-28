@@ -213,7 +213,10 @@ export class Dropdown implements MenuElement {
         })
 
         // If triggered using the keyboard, move focus to first item
-        if (e.detail === 0) this.focusables[0].focus()
+        if (e.detail === 0) {
+          let focusIndex = findFocusableIndex(this.focusables, -1, 1)
+          if (focusIndex != null) this.setFocusIndex(focusIndex)
+        }
 
         open.node.addEventListener("keydown", (event) => {
           markMenuEvent(event)
@@ -260,7 +263,7 @@ export class Dropdown implements MenuElement {
   }
 
   setFocusIndex(index: number) {
-    if (this.focusables.length <= 1 || index == this.focusIndex) return
+    if (this.focusables.length <= 1) return
     this.focusables[this.focusIndex].setAttribute("tabindex", "-1")
     this.focusIndex = index
     let nextFocusItem = this.focusables[index]
@@ -396,7 +399,8 @@ export class DropdownSubmenu implements MenuElement {
     btn.addEventListener("keydown", e => {
       if (e.key === "ArrowRight") {
         openSubmenu(e)
-        items.focusables[0].focus()
+        let focusIndex = findFocusableIndex(this.focusables, -1, 1)
+        if (focusIndex != null) this.setFocusIndex(focusIndex)
       }
     })
     // Clicking on an item should not remove focus from the editor
@@ -422,7 +426,7 @@ export class DropdownSubmenu implements MenuElement {
   }
 
   setFocusIndex(index: number) {
-    if (this.focusables.length <= 1 || index == this.focusIndex) return
+    if (this.focusables.length <= 1) return
     this.focusables[this.focusIndex].setAttribute("tabindex", "-1")
     this.focusIndex = index
     let nextFocusItem = this.focusables[index]
