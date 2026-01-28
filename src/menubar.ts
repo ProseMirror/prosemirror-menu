@@ -82,11 +82,12 @@ class MenuBarView {
       potentialScrollers.forEach(el => el.addEventListener('scroll', this.scrollHandler!))
     }
 
+    let focusIndex = findFocusableIndex(this.focusables, -1, 1)
     // update focusIndex on focus change
     for (let i = 0; i < focusables.length; i++) {
       let focusable = focusables[i]
       // set `tabindex` to -1 for all but the first focusable item
-      if (i) focusable.setAttribute("tabindex", "-1")
+      if (i != focusIndex) focusable.setAttribute("tabindex", "-1")
       focusable.addEventListener("focus", () => {
         if (this.focusIndex === i) return
         let prevFocusItem = this.focusables[this.focusIndex]

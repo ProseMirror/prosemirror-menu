@@ -313,6 +313,12 @@ function renderDropdownItems(items: readonly MenuElement[], view: EditorView) {
     updates.push(update)
   }
 
+  let focusIndex = findFocusableIndex(focusables, -1, 1)
+  for (let i = 0; i < focusables.length; i++) {
+    // set `tabindex` to -1 for all but the first focusable item
+    if (i != focusIndex) focusables[i].setAttribute("tabindex", "-1")
+  }
+
   function update(state: EditorState) {
     let something = false
     for (let i = 0; i < elts.length; i++) {
