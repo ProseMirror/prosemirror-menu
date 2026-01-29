@@ -308,6 +308,7 @@ function renderDropdownItems(items: readonly MenuElement[], view: EditorView) {
       class: `${prefix}-dropdown-item`,
       role: "menuitemradio",
       "aria-checked": dom.classList.contains(prefix + "-active").toString(),
+      "tabindex": "-1"
     }, dom))
     focusables.push(focusable || dom)
     updates.push(update)
@@ -380,7 +381,7 @@ export class DropdownSubmenu implements MenuElement {
                    crel("div", {class: prefix + "-submenu"}, items.dom))
     let listeningOnClose: (() => void) | null = null
 
-    function openSubmenu(e: Event) {
+    let openSubmenu = (e: Event) => {
       e.preventDefault()
       e.stopPropagation()
       markMenuEvent(e)
@@ -393,15 +394,15 @@ export class DropdownSubmenu implements MenuElement {
             listeningOnClose = null
           }
         })
+      if (!(e.type == "click" && (e as MouseEvent).detail)) {
+        let focusIndex = findFocusableIndex(this.focusables, -1, 1)
+        if (focusIndex != null) this.setFocusIndex(focusIndex)
+      }
     }
 
     btn.addEventListener("click", openSubmenu)
     btn.addEventListener("keydown", e => {
-      if (e.key === "ArrowRight") {
-        openSubmenu(e)
-        let focusIndex = findFocusableIndex(this.focusables, -1, 1)
-        if (focusIndex != null) this.setFocusIndex(focusIndex)
-      }
+      if (e.key === "ArrowRight") openSubmenu(e)
     })
     // Clicking on an item should not remove focus from the editor
     btn.addEventListener("mousedown", e => e.preventDefault())
