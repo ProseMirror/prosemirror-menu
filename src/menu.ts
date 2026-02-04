@@ -306,8 +306,7 @@ function renderDropdownItems(items: readonly MenuElement[], view: EditorView) {
     let {dom, update, focusable} = item.render(view)
     elts.push(crel("li", {
       class: `${prefix}-dropdown-item`,
-      role: "menuitemradio",
-      "aria-checked": dom.classList.contains(prefix + "-active").toString(),
+      role: "menuitem",
       "tabindex": "-1"
     }, dom))
     focusables.push(focusable || dom)
