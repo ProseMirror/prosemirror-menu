@@ -48,8 +48,11 @@ export class MenuItem<E extends HTMLElement = HTMLButtonElement> implements Menu
     if (spec.css) dom.style.cssText += spec.css
 
     dom.addEventListener("click", e => {
-      if (!dom!.classList.contains(prefix + "-disabled"))
+      if (!dom!.classList.contains(prefix + "-disabled")) {
+        let setFocus = document.activeElement == dom || document.activeElement == view.dom
         spec.run(view.state, view.dispatch, view, e)
+        if (setFocus && document.activeElement == dom) view.focus()
+      }
     })
     // Clicking on a menu item should not remove focus from the editor
     dom.addEventListener("mousedown", e => e.preventDefault())
@@ -153,6 +156,7 @@ export class Dropdown implements MenuElement {
   focusables: HTMLElement[] = []
   /// @internal
   focusIndex = 0
+  private focusTimeout = -1
 
   /// Create a dropdown wrapping the elements.
   constructor(
@@ -227,6 +231,13 @@ export class Dropdown implements MenuElement {
             close()
             btn.focus()
           }
+        })
+        open.node.addEventListener("focusout", () => {
+          clearTimeout(this.focusTimeout)
+          this.focusTimeout = setTimeout(() => {
+            let active = win.document.activeElement
+            if (active && open && !open.node.contains(active)) close()
+          }, 20)
         })
       }
     })
@@ -319,11 +330,6 @@ function renderDropdownItems(items: readonly MenuElement[], view: EditorView) {
       let dom = elts[i], up = updates[i](state)
       if (up) something = true
       dom.style.display = up ? "" : "none"
-      let checked = dom.classList.contains(prefix + "-active")
-      if (dom.getAttribute("aria-checked") !== checked.toString()) {
-        dom.setAttribute("aria-checked", checked.toString())
-        something = true
-      }
     }
     return something
   }
@@ -355,6 +361,7 @@ export class DropdownSubmenu implements MenuElement {
   focusables: HTMLElement[] = []
   /// @internal
   focusIndex = 0
+  private focusTimeout = -1
 
   /// Creates a submenu for the given group of menu elements. The
   /// following options are recognized:
@@ -377,7 +384,7 @@ export class DropdownSubmenu implements MenuElement {
 
     let btn = crel("button", {class: prefix + "-submenu-label"}, translate(view, this.options.label || ""))
     let wrap = crel("div", {class: prefix + "-submenu-wrap"}, btn,
-                   crel("div", {class: prefix + "-submenu"}, items.dom))
+                    crel("div", {class: prefix + "-submenu"}, items.dom))
     let listeningOnClose: (() => void) | null = null
 
     let openSubmenu = (e: Event) => {
@@ -415,6 +422,15 @@ export class DropdownSubmenu implements MenuElement {
         setClass(wrap, prefix + "-submenu-wrap-active", false)
         btn.focus()
       }
+    })
+
+    items.dom.addEventListener("focusout", () => {
+      clearTimeout(this.focusTimeout)
+      this.focusTimeout = setTimeout(() => {
+        let active = win.document.activeElement
+        if (active && !items.dom.contains(active))
+          wrap.classList.remove(prefix + "-submenu-wrap-active")
+      }, 20)
     })
 
     function update(state: EditorState) {
