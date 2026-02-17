@@ -1,3 +1,9 @@
+## 1.3.0 (2026-02-17)
+
+### New features
+
+The menu elements and menu bar now support keyboard navigation and use ARIA attributes for improved accessibility.
+
 ## 1.2.5 (2025-04-22)
 
 ### Bug fixes
