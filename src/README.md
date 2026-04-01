@@ -1,3 +1,5 @@
+**This repository has moved to https://code.haverbeke.berlin/prosemirror/prosemirror-menu**
+
 # prosemirror-menu
 
 [ [**WEBSITE**](https://prosemirror.net) | [**ISSUES**](https://code.haverbeke.berlin/prosemirror/prosemirror-menu/issues) | [**FORUM**](https://discuss.prosemirror.net) | [**GITTER**](https://gitter.im/ProseMirror/prosemirror) ]
