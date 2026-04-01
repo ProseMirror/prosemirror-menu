@@ -1,6 +1,6 @@
 # prosemirror-menu
 
-[ [**WEBSITE**](https://prosemirror.net) | [**ISSUES**](https://github.com/prosemirror/prosemirror-menu/issues) | [**FORUM**](https://discuss.prosemirror.net) | [**GITTER**](https://gitter.im/ProseMirror/prosemirror) ]
+[ [**WEBSITE**](https://prosemirror.net) | [**ISSUES**](https://code.haverbeke.berlin/prosemirror/prosemirror-menu/issues) | [**FORUM**](https://discuss.prosemirror.net) | [**GITTER**](https://gitter.im/ProseMirror/prosemirror) ]
 
 This is a non-core example module for [ProseMirror](https://prosemirror.net).
 ProseMirror is a well-behaved rich semantic content editor based on
@@ -19,10 +19,10 @@ ProseMirror, publish your fork, and if it works for me, I'll gladly
 deprecate this in favor of your module.
 
 This code is released under an
-[MIT license](https://github.com/prosemirror/prosemirror/tree/master/LICENSE).
+[MIT license](https://code.haverbeke.berlin/prosemirror/prosemirror/src/branch/main/LICENSE).
 There's a [forum](http://discuss.prosemirror.net) for general
 discussion and support requests, and the
-[Github bug tracker](https://github.com/prosemirror/prosemirror-menu/issues)
+[bug tracker](https://code.haverbeke.berlin/prosemirror/prosemirror-menu/issues)
 is the place to report issues.
 
 ## Documentation
@@ -31,7 +31,7 @@ This module defines a number of building blocks for ProseMirror menus,
 along with a [menu bar](#menu.menuBar) implementation.
 
 When using this module, you should make sure its
-[`style/menu.css`](https://github.com/ProseMirror/prosemirror-menu/blob/master/style/menu.css)
+[`style/menu.css`](https://code.haverbeke.berlin/prosemirror/prosemirror-menu/src/branch/main/style/menu.css)
 file is loaded into your page.
 
 ### interface MenuElement
